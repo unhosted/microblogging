@@ -1,0 +1,18 @@
+#templates {
+    display : none;
+}
+
+#feeds {
+    margin : auto;
+    width : 80%;
+}
+
+.blogpost {
+    background : grey;
+    border-radius : 2em;
+    border : 3px lightgrey groove;
+}
+
+.blogpost .time{
+    float : right;
+}
