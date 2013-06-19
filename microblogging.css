@@ -3,16 +3,44 @@
 }
 
 #feeds {
-    margin : auto;
-    width : 80%;
+    float: right;
+    margin : 1em;
+    width : 65%;
 }
 
 .blogpost {
     background : grey;
     border-radius : 2em;
     border : 3px lightgrey groove;
+    margin : 1em;
 }
 
-.blogpost .time{
+.blogpost .created_at{
     float : right;
+}
+
+#profile {
+    display:inline;
+    float: left;
+    max-width : 30%;
+    width : 17em;
+}
+.label {
+    font-variant : small-caps;
+    font-style : italic
+}
+.value {
+    color : grey;
+}
+.screenname{
+    font-size : 1.5em;
+    color : darkgreen;
+}
+.profile_img{
+    display:block;
+    width:80%;
+    margin : auto;
+}
+#profile p{
+    margin : 1em;
 }

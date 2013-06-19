@@ -2,6 +2,14 @@
   <head>
     <script src="helpers.js"></script>
     <script src="main.js"></script>
+    <script src="post.js"></script>
+    <script src="rss.js"></script>
+    <script src="profile.js"></script>
+    <script src="http://remotestoragejs.com/release/0.7.2/remotestorage.min.js"></script>
+    <script src="remote.js"></script>
+    <script src="profile-module.js"></script>
+    <script src="microblog-module.js"></script>
+    <script src="http://www.broofa.com/Tools/Math.uuid.js"></script>
     <link rel="stylesheet" href="microblogging.css">
   </head>
   <body>
@@ -11,12 +19,32 @@
 	  <img class='avatar'></img>
 	  <span class='fullname'> </span>
 	  <span class='screenname'> </span>
-	  <span class='time'> </span>
+	  <span class='created_at'> </span>
 	</a>
-	<p class='tweet'> have fun </p>
+	<p class='text'> have fun </p>
       </div>
     </div>
-    <div id='feeds'>
+    <div id="feeds">
+    </div>
+    <div id="profile">
+      <img class="profile_img" src="http://upload.wikimedia.org/wikipedia/commons/3/36/MRI_head_side.jpg"/>
+      <p>
+	<span class="screenname"></span>
+      </p>
+      <p>
+	<span class="name"></span>
+      </p>
+      <p>
+	<span class="label">bio:</span>
+	<span class="value description"></span>
+      </p>
+      <p>
+	<span class="label">location:</span>
+	<span class="value location"></span>
+      </p>
+      <p>
+	<a class="homepage" href=""> homepage </a>
+      </p>
     </div>
   </body>
 </html>
