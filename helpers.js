@@ -11,7 +11,7 @@ function list_first(items, func){
 function forEach(data, func){
     var len = data.length
     for(var i = 0; i < len; i++){
-	return func(data[i]);
+	func(data[i]);
     }
 }
 

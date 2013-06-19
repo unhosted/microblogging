@@ -4,9 +4,9 @@
     <script src="main.js"></script>
     <script src="post.js"></script>
     <script src="rss.js"></script>
-    <script src="profile.js"></script>
-    <script src="http://remotestoragejs.com/release/0.7.2/remotestorage.min.js"></script>
+    
     <script src="remote.js"></script>
+    <script src="http://remotestoragejs.com/release/0.7.2/remotestorage.min.js"></script>
     <script src="profile-module.js"></script>
     <script src="microblog-module.js"></script>
     
@@ -33,26 +33,34 @@
 	<button onclick="event.preventDefault(); create_post()"> POST</button>
       </form>
     </div>
-    <div id="profile">
+    <form id="profile" name="profile">
       <img class="profile_img" src="http://upload.wikimedia.org/wikipedia/commons/3/36/MRI_head_side.jpg"/>
+      <input name="profile_image_url" class="edit_profile">
       <p>
 	<span class="screenname"></span>
+	<input name="screenname" class="edit_profile">
       </p>
       <p>
 	<span class="name"></span>
+	<input name="name" class="edit_profile">
       </p>
       <p>
 	<span class="label">bio:</span>
 	<span class="value description"></span>
+	<textarea name="description" class="edit_profile"></textarea>
       </p>
       <p>
 	<span class="label">location:</span>
 	<span class="value location"></span>
+	<input name="location" class="remote edit_profile">
       </p>
       <p>
 	<a class="homepage" href=""> homepage </a>
+	<input name="homepage" class="edit_profile">
       </p>
-      <p> <a href="event.preventDefault(); edit_profile()"> edit </a> </p>
-    </div>
+      <p> 
+	<button class="edit_profile edit" onclick="event.preventDefault(); edit_profile()"> edit </button> 
+      </p>
+    </form>
   </body>
 </html>

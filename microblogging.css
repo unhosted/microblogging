@@ -8,6 +8,10 @@
     width : 65%;
 }
 
+.edit_profile{
+    display : none;
+}
+
 #micropost {
     display : none;
     width : 80%;

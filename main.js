@@ -25,8 +25,8 @@ function init(){
     blogpost_template = document.getElementById('blogpost_template');
     aggregate(options.base_url+'/microblog/microposts_list');
     set_profile();
-
-//    init_remotestorage();
+    if(options.me == 'true')
+	init_remotestorage();
 }
 
 
@@ -51,6 +51,21 @@ function aggregate(url){
 
 function aggregate_item(url){
     get_url(url, new_post);
+}
+
+function set_profile(){
+    var profile_keys = ['screenname','name','description','location']
+    get_url(  options.base_url+'/profile/me',
+	      function(profile){
+		  fill_div(profile_div, profile_keys, profile);
+		  f(profile_div,'profile_img').src = 
+		      profile.profile_image_url;
+		  f(profile_div, 'homepage').href = profile.homepage;
+		  profile_data = profile;
+	      }
+	   )
+
+
 }
 
 
