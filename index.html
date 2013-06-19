@@ -9,12 +9,12 @@
     <script src="remote.js"></script>
     <script src="profile-module.js"></script>
     <script src="microblog-module.js"></script>
-    <script src="http://www.broofa.com/Tools/Math.uuid.js"></script>
+    
     <link rel="stylesheet" href="microblogging.css">
   </head>
   <body>
-    <div id='templates'>
-      <div id='blogpost_template' class='blogpost'>
+    <div id="templates">
+      <div id="blogpost_template" class="blogpost">
 	<a>
 	  <img class='avatar'></img>
 	  <span class='fullname'> </span>
@@ -24,7 +24,14 @@
 	<p class='text'> have fun </p>
       </div>
     </div>
+    <div id="login" onclick="init_remotestorage();">
+      login
+    </div>
     <div id="feeds">
+      <form id="micropost">
+	<textarea name='text'></textarea>
+	<button onclick="event.preventDefault(); create_post()"> POST</button>
+      </form>
     </div>
     <div id="profile">
       <img class="profile_img" src="http://upload.wikimedia.org/wikipedia/commons/3/36/MRI_head_side.jpg"/>
@@ -45,6 +52,7 @@
       <p>
 	<a class="homepage" href=""> homepage </a>
       </p>
+      <p> <a href="event.preventDefault(); edit_profile()"> edit </a> </p>
     </div>
   </body>
 </html>

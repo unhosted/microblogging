@@ -23,10 +23,10 @@ function init(){
 
     post_ids = 0;
     blogpost_template = document.getElementById('blogpost_template');
-    aggregate(options.base_url+'/www/microposts');
+    aggregate(options.base_url+'/microblog/microposts_list');
     set_profile();
 
-    init_remotestorage();
+//    init_remotestorage();
 }
 
 
@@ -34,9 +34,14 @@ function new_post(data){
     posts.push(new Post(data));
 }
 
-
-
 function get_items (items) {
+    items.sort(function(a,b){
+	if(a.created_at < b.created_at)
+	    return -1;
+	if(a.created_at > b.created_at)
+	    return 1;
+	return 0;
+    }) // TODO lets see if this works with timestamps in the used format (whatever that might be)
     items.forEach(aggregate_item);
 }
 

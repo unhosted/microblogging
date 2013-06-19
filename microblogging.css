@@ -8,6 +8,29 @@
     width : 65%;
 }
 
+#micropost {
+    display : none;
+    width : 80%;
+    margin : auto;
+}
+#micropost > textarea {
+    width : 40em;
+    height : 4em;
+}
+#login {
+    position : absolute;
+    top : 1em;
+    right : 1em;
+    font-variant : small-caps;
+    font-size : 1.3em;
+    color : orange;
+    border : 1px orange solid;
+    border-radius : 1em;
+    padding : 0.2em;
+    background-color : silver;
+    
+}
+
 .blogpost {
     background : grey;
     border-radius : 2em;

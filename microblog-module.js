@@ -52,9 +52,9 @@ remoteStorage.defineModule('microblog',
 	      },
 	      'update' : update_microblogs_list
 	      ,
-	      'push' : function(data){
+	      'post' : function(data){
 		  return publicClient.storeObject('micropost',
-		      path+Math.uuid(), data)
+		      path+publicClient.uuid(), data)
 		      .then(
 		 	  update_microblogs_list
 		      );
