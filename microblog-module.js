@@ -16,7 +16,11 @@ remoteStorage.defineModule('microblog',
 		  }
 	      },*/
 	  },
-      })
+      });
+      publicClient.declareType('micropost_list', {
+	  'type' : 'Array'
+      });
+
       var keys = undefined;
       var path = "microposts/"
 
@@ -26,9 +30,9 @@ remoteStorage.defineModule('microblog',
 	
 		  var items = [];
 		  for( var i in posts){
-		      items.push(posts[i]);
+		      items.push(publicClient.getItemURL(path+posts[i]));
 		  }
-		  console.log(items);
+		  publicClient.storeObject('micropost_list','microposts_list',items)
 	      }
 	  );
       }
