@@ -3,10 +3,13 @@ remoteStorage.defineModule('microblog',
       publicClient.declareType('micropost', {
 	  'type' : 'object',
 	  'properties' : {
-	      'created_at' : {
-		  'type' : 'string'
+	      'date' : {
+		  'type' : 'integer'
 	      },
 	      'text' : {
+		  'type' : 'string'
+	      },
+	      'uuid' : {
 		  'type' : 'string'
 	      },
 	      /*'retweet' : {
@@ -21,7 +24,6 @@ remoteStorage.defineModule('microblog',
 	  'type' : 'Array'
       });
 
-      var keys = undefined;
       var path = "microposts/"
 
       function update_microblogs_list(){
@@ -39,27 +41,31 @@ remoteStorage.defineModule('microblog',
 
       return {
 	  'exports' : {
-	      pub: publicClient,
-	      'keys' : function(){
-		  if(!keys){
-		      var shemas = publicClient.schemas;
-		      keys = Object.keys(shemas[Object.keys(shemas)[0]].properties);
-		  }
-		  return keys;
-	      },
+	      //pub: publicClient,
 	      'load' : function(id){
 		  return publicClient.getObject(path+id);
 	      },
 	      'update' : update_microblogs_list
 	      ,
 	      'post' : function(data){
+		  if(!data.date){
+		      data.date = (new Date).getTime()
+		  }
+		  if(!data.uuid)
+		      data.uuid = publicClient.uuid();
+		  console.log('saving : ',data);
 		  return publicClient.storeObject('micropost',
-		      path+publicClient.uuid(), data)
+		      path+data.uuid, data)
 		      .then(
 		 	  update_microblogs_list
 		      );
 		  
-	      },   
+	      },
+	      'delete' : function(id){
+		  return publicClient.remove(path+id).then(
+		      update_microblogs_list
+		  );
+	      }
 	  }
       }
   });

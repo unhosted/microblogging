@@ -7,18 +7,55 @@ function init_remotestorage(){
 	});
     remoteStorage.displayWidget();
     document.all.login.style.display = 'none';
-    document.all.micropost.style.display = 'block';
-    f(profile_div, 'edit').style.display = 'block';
-    document.baseURI+='&me=true;'
+    // document.all.micropost.style.display = 'block';
+    // f(profile_div, 'edit').style.display = 'block';
+    document.baseURI+='&me=true;' // TODO how to handle this
+    forEach(document.getElementsByClassName('remote'), function(el){
+	el.style.display = 'block'
+    })
 }
 
 
 function create_post(){
     var data = new Object;
     data['text'] = document.forms.micropost.text.value
-    data['created_at'] = Date();
+    //data['created_at'] = Date(); // is done in the module now with (new Date()).getTime()
     remoteStorage.microblog.post(data);
     new_post(data);
+}
+
+function delete_post(post){
+    remoteStorage.microblog.delete(post.uuid).then(
+	function(){
+	    var div = post.div();
+	    div.className += ' deleted';
+	    var b = f(div, 'delete');
+	    b.innerHTML = 'restore';
+	    b.onclick = function(){
+		restore_post(post);
+	    }
+	    
+	}
+    )
+}
+
+function restore_post(post){
+    var data = {
+	'text' : post.text,
+	'date' : post.date,
+	'uuid' : post.uuid
+    }
+    remoteStorage.microblog.post(data).then(
+	function() {
+	    var div = post.div();
+	    div.className = div.className.replace(/deleted/, '');
+	    var b = f(div,'delete');
+	    b.innerHTML = 'del';
+	    b.onclick = function(){
+		delete_post(post);
+	    }
+	}
+    )
 }
 
 function edit_profile(){

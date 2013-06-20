@@ -11,6 +11,19 @@
 .edit_profile{
     display : none;
 }
+.remote{
+    display : none;
+}
+.delete {
+    float:right;
+}
+
+.deleted{
+    opacity : 0.4;
+}
+.blogpost{
+    min-height : 5em;
+}
 
 #micropost {
     display : none;

@@ -1,9 +1,9 @@
 
 
 function Post(data){
-    var props = ['created_at', 'text', 'fullname', 'screenname']
-    
-    props.forEach(function(key){
+    var props = ['created_at',  'text', 'fullname', 'screenname']
+    data.created_at = (new Date(data['date'])).toString();
+    Object.keys(data).forEach(function(key){
 	var t;	
 	if( !( t = data[key] ) )
 	    t = '';
@@ -25,7 +25,10 @@ function Post(data){
 	    item = blogpost_template.cloneNode(true);
 	    item.id = "";
 	    item.dataset.id = this.id;
-
+	    item.dataset.uuid = this.uuid
+	    f(item, 'delete').onclick = function(){
+		delete_post(this)
+	    }.bind(this)
 	    fill_div(item, props, this);
 	    feeds_div.insertBefore(item, feeds.firstElementChild);
 	}
