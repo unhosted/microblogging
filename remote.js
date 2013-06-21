@@ -9,8 +9,10 @@ function init_remotestorage(){
     );
     remoteStorage.displayWidget();
     
+    
     if(document.location.search.indexOf("me=true") < 0){
-	history.pushState(undefined, "profile", document.location.search+"&me=true");
+/*	history.pushState(undefined, "profile", document.location.search+"&me=true");*/
+	window.location.replace('?me=true');
     }
     //remoteStorage.microblog.on('change',function(e){})
     // TODO ask someone why this is wrong
