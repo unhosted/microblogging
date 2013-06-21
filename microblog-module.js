@@ -31,7 +31,8 @@ remoteStorage.defineModule('microblog',
 	      function(posts){
 	
 		  var items = [];
-		  for( var i in posts){
+		  var len =  posts.length;
+		  for( var i = 0; i <= len; i++){
 		      items.push(publicClient.getItemURL(path+posts[i]));
 		  }
 		  publicClient.storeObject('micropost_list','microposts_list',items)
@@ -65,6 +66,9 @@ remoteStorage.defineModule('microblog',
 		  return publicClient.remove(path+id).then(
 		      update_microblogs_list
 		  );
+	      },
+	      'list' : function(){
+		  return publicClient.getListing(path);
 	      }
 	  }
       }

@@ -1,18 +1,59 @@
 function init_remotestorage(){
+    
+    document.all.login.style.display = 'none';
 
     remoteStorage.claimAccess(
-	{
-	    'microblog':'rw',
-	    'profile':'rw'
-	});
+	{ 'microblog':'rw',
+	  'profile':'rw'
+	}
+    );
     remoteStorage.displayWidget();
-    document.all.login.style.display = 'none';
-    // document.all.micropost.style.display = 'block';
-    // f(profile_div, 'edit').style.display = 'block';
-    document.baseURI+='&me=true;' // TODO how to handle this
-    forEach(document.getElementsByClassName('remote'), function(el){
-	el.style.display = 'block'
-    })
+    
+    if(document.location.search.indexOf("me=true") < 0){
+	history.pushState(undefined, "profile", document.location.search+"&me=true");
+    }
+    //remoteStorage.microblog.on('change',function(e){})
+    // TODO ask someone why this is wrong
+
+    remoteStorage.on('ready', 
+		     function(){	
+	    forEach(document.getElementsByClassName('remote'), function(el){
+		el.style.display = 'block'
+	    })
+	    // load profile from rs
+	    remoteStorage.profile.load().then(set_profile)
+
+	    // load posts from rs
+			 console.log('loading posts from rs')
+	    remoteStorage.microblog.list().then(function(l){
+		l.forEach( function(p){
+		    console.log(p);
+		    remoteStorage.microblog.load(p).then(
+			new_post
+		    )
+		})
+	    })
+	
+	}
+     )
+    
+    remoteStorage.on('disconnect',
+		     function()
+	{
+	    forEach(document.getElementsByClassName('remote'), function(el){
+		el.style.display = 'none'
+	    });
+	    forEach(document.getElementsByClassName('edit_profile'), 
+		    function(el)
+		    {
+			el.style.display = 'none'
+		    }
+		   );
+
+
+        }
+    )
+
 }
 
 

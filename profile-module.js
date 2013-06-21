@@ -26,8 +26,6 @@ remoteStorage.defineModule('profile',
       var keys = undefined;
       return {
 	  'exports' : {
-
-	      pub: publicClient,
 	      'keys' : function(){
 		  if(!keys){
 		      var shemas = publicClient.schemas;
@@ -54,12 +52,23 @@ remoteStorage.defineModule('profile',
 	      'load' : function(){
 		  return publicClient.getObject('me');
 	      },
-	      'deploy' : function(page){
-		  return publicClient.storeFile('text/html', 'profile.html', page, false)
+	      'deploy' : function(){
+		  publicClient.getObject('me').then( function(me){
+		      var page = ""
+		      publicClient.getFile('template').then( function(template){
+			  var page = template.data ;
+			  Object.keys(me).forEach( function(k) {
+			      page = page.replace( new RegExp('(\\$'+key+')'), me[key] )
+			  })
+		      })
+		      return remoteStorage.www.up('profile.html', 
+						  'text/html', 
+						  page)
+		  })
 	      },
-	      'link' : function(){
+	      /*'link' : function(){
 		  return publicClient.getItemURL('profile.html');
-	      }
+	      }*/
 	   
 	  }
       }

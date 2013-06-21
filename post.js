@@ -25,7 +25,7 @@ function Post(data){
 	    item = blogpost_template.cloneNode(true);
 	    item.id = "";
 	    item.dataset.id = this.id;
-	    item.dataset.uuid = this.uuid
+	    item.dataset.uuid = this.uuid;
 	    f(item, 'delete').onclick = function(){
 		delete_post(this)
 	    }.bind(this)
