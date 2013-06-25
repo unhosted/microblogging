@@ -75,6 +75,11 @@ function initListeners() {
     sc.on('close', function (data) {
         console.log('SH received close: ', data);
     });
+    sc.submit({
+        platform: 'custom',
+        verb: 'post',
+        object: keys
+    });
 }
 
 function new_post(data){
