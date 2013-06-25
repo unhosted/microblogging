@@ -23,7 +23,9 @@ function init_remotestorage(){
 		el.style.display = 'block'
 	    })
 	    // load profile from rs
-	    remoteStorage.profile.load().then(set_profile)
+	    remoteStorage.profile.load().then(set_profile, function(e){
+		console.log("no profile yet ? : ",e)
+	    })
 
 	    // load posts from rs
 			 console.log('loading posts from rs')

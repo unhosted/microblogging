@@ -37,11 +37,11 @@ function init_listeners(e) {
     });
 }
 
-var cfg = {
+var twitter_cfg = {
 	username: 'noone_notmany',
 	consumer_key: '3QeJdNd1DwUcGkRYCNGQ',
 	consumer_secret: 'bfJD6ztBF2zvWFRUYVDTqggpqdD2zxKKzvN44qfLdp4',
-	access_token: '1527612912-R2jfLkRbFawh0tT41LO5fFXi4RjtWfCPKr0yFnV'
+	access_token: '1527612912-R2jfLkRbFawh0tT41LO5fFXi4RjtWfCPKr0yFnV',
 	access_token_secret: 'RsDXzxoTGkwvCSl869lOWlruh18SqPhRfhoPI6h1aAA'
     }
 
@@ -81,7 +81,7 @@ function syndicate_to_twitter(){
 function actnow(){
     init_sockethub(host,secret).then(
 	function(){
-	    set_twitter_credentials(cfg).then(
+	    set_twitter_credentials(twitter_cfg).then(
 		syndicate_to_twitter
 	    )
 	}

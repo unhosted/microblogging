@@ -46,8 +46,10 @@ function init(){
         }
      }
     if(keys) {
+	twitter_cfg = keys;
+	/*
         var sockethubClient = SockethubClient.connect({
-            host: 'wss://unht-beta.heahdk.net:10550',
+            host: 'wss://unht-beta.heahdk.net:10551',
         }).then(function (connection) { // connected
             sc = connection;
             sc.register({
@@ -57,10 +59,10 @@ function init(){
             });
         }, function (e) {
             console.log('failed connecting: ', e);
-        });
+        });*/
     }
 }
-
+/*
 function initListeners() {
     console.log('init message listener');
 //    sc.on('message', function (data) {
@@ -88,7 +90,7 @@ function initListeners() {
     }, function (err) {
         console.log('oh no! ', err);
     });
-}
+}*/
 
 function new_post(data){
     posts.push(new Post(data));
