@@ -1,23 +1,23 @@
 
-var feeds_div
-var profile_div
+var feeds_div;
+var profile_div;
 
-var blogpost_template
+var blogpost_template;
 
-var keys
-var sockethubClient, sc
+var keys;
+var sockethubClient;
 
-var options
-var url
+var options;
+var url;
 
 
-var post_ids
-var posts = []
+var post_ids;
+var posts = [];
 
 var profile_data;
 
 function init(){
-    
+
     options = args_to_object(document.location.search);
 
     feeds_div = document.getElementById('feeds');
@@ -25,9 +25,8 @@ function init(){
 
     post_ids = 0;
     blogpost_template = document.getElementById('blogpost_template');
-    
-   
-    
+
+
     if(options.me == 'true'){
         init_remotestorage();
     } else {
@@ -38,6 +37,9 @@ function init(){
         }
     }
     if(options.keys) {
+        if(options.keys.substr(-1) == '/') {
+            options.keys = options.keys.substr(0, options.keys.length - 1);
+        }
         try {
             keys = JSON.parse(options.keys);
             console.log('parse success', keys);
@@ -46,57 +48,39 @@ function init(){
         }
      }
     if(keys) {
-	twitter_cfg = keys;
-	
-        var sockethubClient = SockethubClient.connect({
-            host: 'wss://unht-beta.heahdk.net:10550',
-        }).then(function (connection) { // connected
-            sc = connection;
-            sc.register({
+	      twitter_cfg = keys;
+
+        sockethubClient = SockethubClient.connect({
+            host: 'unht-beta.heahdk.net',
+            ssl: true,
+            register: {
                 secret: "1234567890"
-            }).then(initListeners, function (e) {
-                console.log('failed registering: ', e);
-            });
-        }, function (e) {
-            console.log('failed connecting: ', e);
+            }
+        });
+
+        sockethubClient.on('message', function (message) {
+            console.log('SH received message', message);
+        });
+        sockethubClient.on('registered', function() {
+            console.log('submitting custom.post(keys)');
+            sockethubClient.sendObject({
+                platform:'customer',
+                verb:'post',
+                target:[],
+                actor:{
+                    address:'a@b.c'
+                },
+                object: {
+                    text: '',
+                    keys: keys
+                }
+            }).then(function (response) {
+                console.log('post sucessful, heres the response: ', response);
+            }, function (err) {
+                console.log('oh no! ', err);
+            }); 
         });
     }
-}
-
-function initListeners() {
-    console.log('init message listener');
-    sc.on('message', function (data) {
-        console.log('SH received message');
-    });
-    console.log('init error listener');
-    sc.on('error', function (data) {
-        console.log('SH received error: ', data);
-    });
-    console.log('init response listener');
-    sc.on('response', function (data) {
-        console.log('SH received response: ', data);
-    });
-    console.log('init close listener');
-    sc.on('close', function (data) {
-        console.log('SH received close: ', data);
-    });
-    console.log('submitting custom.post(keys)');
-    sc.submit({
-        platform:'customer',
-        verb:'post',
-        target:[],
-        actor:{
-           address:'a@b.c'
-        },
-        object: {
-          text: '',
-          keys: keys
-        }
-    }, 10000).then(function (response) {
-        console.log('post sucessful, heres the response: ', response);
-    }, function (err) {
-        console.log('oh no! ', err);
-    });
 }
 
 function new_post(data){
@@ -105,12 +89,12 @@ function new_post(data){
 
 function get_items (items) {
     items.sort(function(a,b){
-    if(a.created_at < b.created_at)
-        return -1;
-    if(a.created_at > b.created_at)
-        return 1;
-    return 0;
-    }) // TODO lets see if this works with timestamps in the used format (whatever that might be)
+        if(a.created_at < b.created_at)
+            return -1;
+        if(a.created_at > b.created_at)
+            return 1;
+        return 0;
+    }); // TODO lets see if this works with timestamps in the used format (whatever that might be)
     items.forEach(aggregate_item);
 }
 
@@ -123,13 +107,13 @@ function aggregate_item(url){
 }
 
 function get_profile(url){
-    get_url( url, set_profile )
+    get_url( url, set_profile );
 }
 
 function set_profile(profile){
     var profile_keys = ['screenname','name','description','location'];
     fill_div(profile_div, profile_keys, profile);
-    f(profile_div,'profile_img').src = 
+    f(profile_div,'profile_img').src =
     profile.profile_image_url;
     f(profile_div, 'homepage').href = profile.homepage;
     profile_data = profile;

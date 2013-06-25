@@ -1,476 +1,370 @@
-(function (window, document, undefined) {
-  function SockethubClient() {}
-
-  function Connection(sock, host, enablePings, confirmationTimeout) {
-    this.sock = sock;
-    this.cfg = {
-      host: host,
-      enablePings:  enablePings,
-      confirmationTimeout: confirmationTimeout
-    };
-    this.state = {
-      isRegistered: false,
-      isConnected: true,
-      pausePing: true
-    };
-    this.counter = 0; // rid counter
-    this.callbacks = {
-      message: function () {},
-      response: function () {},
-      error: function () {},
-      close: function () {}
-    };
-    var cmds = {};
-
-    this.assertConnected = function assertConnected() {
-      if(typeof(sock) === 'undefined') {
-        throw new Error("You need to connect sockethub before sending anything!");
-      }
-    };
-
-    this.lookupVerb = function lookupVerb(rid) {
-      if (typeof cmds[rid] !== 'undefined') {
-        return cmds[rid].sendObject.verb;
-      }
-      return '';
-    };
-
-    this.log = function log(type, rid, message) {
-      var verb = '';
-      if (rid) {
-        verb = ':' + this.lookupVerb(rid);
-      }
-      if (type === 1) {
-        console.log('  [sockethub'+verb+'] info    - '+message);
-      } else if (type === 2) {
-        console.log('  [sockethub'+verb+'] success - '+message);
-      } else if (type === 3) {
-        console.log('  [sockethub'+verb+'] error   - '+message);
-      } else if (type === 4) {
-        console.log('  [sockethub'+verb+'] debug   - '+message);
-      }
-    };
-
-    var _this = this;
-
-    function finishCommand(data) {
-      if (typeof cmds[data.rid] === 'object') {
-
-        cmd = cmds[data.rid];
-        delete cmds[data.rid];
-        var p = cmd.promise;
-        delete cmd.promise;
-
-        if (data.status) {
-          p.fulfill();
-        } else {
-          p.reject(data.message);
-        }
-      } else {
-        _this.log(4, 'finishCommand - unable to find command object for rid ' + data.rid + ' ... skipping');
-
-      }
-    }
-
-    function confirmCommand(data) {
-
-      if (typeof cmds[data.rid] !== 'object') {
-        throw ('finishCommand() - unable to find command object for rid '+data.rid);
-      }
-
-      cmds[data.rid].confirmed = new Date().getTime();
-      cmds[data.rid].confirmResult = data.status;
-      if (!data.status) {
-        finishCommand(data);
-        //cmds[data.rid].response = false;
-      }
-      //console.log('CMDS:', cmds);
-    }
-
-    function respondCommand(data) {
-
-      if (typeof cmds[data.rid] !== 'object') {
-        //console.log('CMDS: ', cmds);
-        console.log('data object received: ', data);
-        throw ('respondCommand() - unable to find command object for rid ' + data.rid);
-      }
-      var now = new Date().getTime();
-      cmds[data.rid].response = now;
-      var cmd = cmds[data.rid];
-
-      if (typeof cmd.promise === "object") { // response with promise callback
-
-        if ((typeof data.status !== "undefined") &&
-            (data.status === false)) {
-          // the response to a command came back as a failure.
-          cmd.log(3, "rejecting promise");
-          if (!cmd['confirmed']) {
-            // sometimes we get a rejection before the confirm, in which case
-            // we need to make sure we set received so that our verification
-            // checks know to stop
-            cmd['confirmed'] = now;
-          }
-          cmd.promise.reject(data);
-        } else {
-          // response is a success
-          if (data.verb === 'register') {
-            _this.state.isRegistered = true;
-            cmd.log(4, 'register object: ' + JSON.stringify(data));
-          }
-          cmd.log(2, "fulfilling promise");
-          cmd.promise.fulfill(data);
-        }
-      } else {  // response without callback, send to handler
-        cmd.log(2, "issuing 'response' callback");
-        _this.callbacks.response(data);
-      }
-    }
-
-
-    //
-    // as far as we know, we're now connected, we can use the 'sock' object
-    // to set our handler functions.
-    //
-    sock.onopen = function () {
-      _this.log(4, null, 'onopen fired');
-      _this.state.isConnected = true;
-    };
-
-    sock.onclose = function () {
-      _this.log(4, null, 'onclose fired');
-      _this.state.pausePing = true;
-      _this.state.isConnected = false;
-      _this.state.isRegistered = false;
-      _this.callbacks.close();
-    };
-
-    sock.onmessage = function (e) {
-      //console.log(' ');
-      //_this.log(4, null, 'onmessage fired ' + JSON.stringify(e.data));
-      //console.log('onmessage fired ', e.data);
-
-      var data = JSON.parse(e.data);
-      var now = new Date().getTime();
-
-      data.rid = (typeof data.rid !== 'undefined') ? data.rid : '';
-      data.result = (typeof data.status !== 'undefined') ? data.status : true;
-
-      if (data.verb === 'confirm') {
-        _this.log(4, data.rid, 'confirmation receipt received. for rid '+data.rid);
-        confirmCommand(data);
-      } else {
-        // now we know that this object is either a response (has an RID) or
-        // a message (new messages from sockethub)
-        if (!data.rid) { // message
-          //_this.log(2, data.rid, e.data);
-          _this.callbacks.message(data);
-          return;
-        }
-
-        respondCommand(data);
-      }
-    };
-
-
-
-
-    /**
-     * Function: Command
-     *
-     * the command object handles the statefull information and functions related
-     * to a single command sent to sockethub (and it's return state/completion)
-     *
-     * Parameters:
-     *
-     *   p - the AS object to send, sans RID
-     *
-     * Returns:
-     *
-     *   return Command object
-     */
-    function Command(p) {
-      this.sent = null;
-      this.confirmed = null;
-      this.confirmResult = null;
-      this.confirmTimeout = _this.cfg.confirmationTimeout;
-      this.response = null;
-      this.responseTimeout = 5000;
-      this.promise = promising();
-
-      this.sendObject = {
-        rid: ++_this.counter,
-        platform: p.platform,
-        verb: p.verb
-      };
-
-      if (typeof p.actor) {
-        this.sendObject.actor = p.actor;
-      }
-      if (typeof p.target) {
-        this.sendObject.target = p.target;
-      }
-      if (typeof p.object) {
-        this.sendObject.object = p.object;
-      }
-    }
-    Command.prototype = {
-      constructor: Command,
-      getRID: function () {
-        return this.sendObject.rid;
-      },
-      log: function (type, message) {
-        _this.log(type, this.getRID(), message);
-      },
-      /**
-       * Function: sendObject
-       *
-       * Send given object, storing a promise of the call
-       *
-       * Returns a promise, which will be fulfilled with the first response carrying
-       * the same 'rid'.
-       */
-      send: function () {
-        var json_o = JSON.stringify(this.sendObject);
-        //this.log(1, 'submitting: '+json_o);
-        var __this = this;
-        function __sendAttempt() {
-          __this.sent = new Date().getTime();
-          sock.send(json_o);
-          setTimeout(function () {
-            __this.log(4, "checking confirmation status for rid:"+__this.getRID());
-            if (!__this.confirmed) {
-              if (_this.assertConnected()) {
-                __this.log(3, "confirmation not received after "+__this.confirmTimeout+'ms, sending again.');
-                __sendAttempt();
-              } else {
-                // TODO : figure out reconnect strategy
-                _this.log(2, 'not connected, aborting command checks');
-                finishCommand(__this.getRID(), false, 'connection lost');
-              }
-            } else {
-              __this.log(4, "confirmation received");
-              if (__this.confirmResult) {
-                __this.log(4, 'setting responseTimeout '+__this.responseTimeout+'ms');
-                setTimeout(function () {
-                  if (!__this.response) {
-                    __this.log(3, 'response not received, rejecting promise');
-                    finishCommand(__this.getRID(), false, 'response timed out');
-                  } else {
-                    __this.log(4, 'response received');
-
-                  }
-                }, __this.responseTimeout);
-              }
-            }
-          }, __this.confirmTimeout);
-        }
-        __sendAttempt();
-        return this.promise;
-      }
-    };
-
-    this.createCommand = function (o) {
-      var cmd = new Command(o);
-      cmds[cmd.getRID()] = cmd;
-      return cmd;
-    };
-  }
-
-  Connection.prototype.on = function (type, callback) {
-    if ((typeof this.callbacks[type] !== 'undefined') &&
-        (typeof callback === 'function')) {
-      this.callbacks[type] = callback;
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define(factory);
     } else {
-      console.log('  [sockethub] ERROR: invalid callback function or type name: ' + type);
+        root.SockethubClient = factory();
     }
-  };
-
-  Connection.prototype.reconnect = function () {
-    this.state.pausePing = true;
-    this.state.isConnected = false;
-    this.state.isRegistered = false;
-    setTimeout(function () {
-      this.sock.close();
-      setTimeout(function () {
-        this.connect(cfg);
-      }, 0);
-    }, 0);
-  };
-
-  Connection.prototype.isConnected = function () {
-    return this.state.isConnected;
-  };
-
-  Connection.prototype.isRegistered = function () {
-    return this.state.isRegistered;
-  };
-
-  /**
-   * Function: togglePings
-   *
-   * toggles pausing of pings, returns value of pause status
-   *
-   * Returns:
-   *
-   *   return
-   *     true  - pings are paused
-   *     false - pings are active
-   */
-  Connection.prototype.togglePings = function () {
-    this.state.pausePing = (this.state.pausePing) ? false : true;
-    return this.state.pausePing;
-  };
-
-
-  /**
-   * Function: register
-   *
-   * register client with sockethub server
-   *
-   * Parameters:
-   *
-   *   data - data to be used as the object property
-   *       The value of the object area of the JSON.
-   *
-   * Returns:
-   *
-   *   return promise
-   */
-  Connection.prototype.register = function (data) {
-    this.log(4, null, 'sockethub.register called');
-    this.assertConnected();
-
-    var obj = this.createCommand({
-      platform: "dispatcher",
-      verb: "register",
-      object: data
-    });
-    //console.log('OBJ:', obj);
-    return obj.send();
-  };
-
-  /**
-   * Function: set
-   *
-   * Issue the set command to a platform
-   *
-   * Parameters:
-   *
-   *   platform - the platform to send the set command to
-   *   data     - the data to be contained in the 'object' propery
-   *
-   */
-  Connection.prototype.set = function (platform, data) {
-    this.assertConnected();
-    var obj = this.createCommand({
-      platform: "dispatcher",
-      verb: "set",
-      target: { platform: platform },
-      object: data
-    });
-    return obj.send();
-  };
-
-  /**
-   * Function: submit
-   *
-   * submit any message to sockethub, providing the entire object (except RID)
-   *
-   * Parameters:
-   *
-   *   o - the entire message (including actor, object, target), but NOT including RID
-   *   timeout - (optional) - the time in milliseconds to allow for a response, fails otherwise
-   *
-   */
-  Connection.prototype.submit = function (o, timeout) {
-    this.assertConnected();
-    if (typeof o.verb === "undefined") {
-      this.log(3, null, "verb must be specified in object");
-      throw "verb must be specified in object";
-    }
-
-    var obj = this.createCommand(o);
-    if (timeout) {
-      obj.responseTimeout = timeout;
-    }
-    return obj.send();
-  };
-
-
-
-
-
-  SockethubClient.prototype.connect = function (o) {
-    var promise = promising();
-    var isConnecting = true;
-
-    // read and verify configuration
-    if (typeof o !== 'object') {
-      promise.reject('connection object not received');
-      return promise;
-    }
-
-    if (typeof o.host === 'undefined') {
-      //log(3, null, "sockethub.connect requires an object parameter with a 'host' property", o);
-      console.log("  [SockethubClient] sockethub.connect requires an object parameter with a 'host' property", o);
-      promise.reject("sockethub.connect requires an object parameter with a 'host' property");
-      return promise;
-    }
-
-    if (typeof o.confirmationTimeout === 'undefined') {
-      o.confirmationTimeout = 4000;
-    }
-
-    if (typeof o.enablePings !== 'undefined') {
-      o.enablePings = true;
-    }
-
-    //log(1, null, 'attempting to connect to ' + o.host);
-    console.log('  [SockethubClient] attempting to connect to ' + o.host);
-
-    try {
-      sock = new WebSocket(o.host, 'sockethub');
-    } catch (e) {
-      //log(3, null, 'error connecting to sockethub: ' + e);
-      console.log('  [SockethubClient] error connecting to sockethub: ' + e);
-      promise.reject('error connecting to sockethub: ' + e);
-    }
-
-    if (!sock) {
-      return promise;
-    }
-
-    sock.onopen = function () {
-      console.log('  [SockethubClient] onopen fired');
-      if (isConnecting) {
-        isConnecting = false;
-        var connection = new Connection(sock, o.host, o.enablePings, o.confirmationTimeout);
-        promise.fulfill(connection);
-      }
-    };
-
-    sock.onclose = function () {
-      console.log('  [SockethubClient] onclose fired');
-      if (isConnecting) {
-        isConnecting = false;
-        promise.reject("Unable to connect to sockethub at "+o.host);
-      }
-    };
-
-    return promise;
-  };
-
-  //console.log('SockethubClient: ',SockethubClient.prototype);
-  window.SockethubClient = new SockethubClient();
-
-})(window, document);
-
-
+}(this, function () {
 
 /**
- * promising.js
- * http://github.com/nilclass/promising
+ * almond 0.1.4 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
+ * Available via the MIT or new BSD license.
+ * see: http://github.com/jrburke/almond for details
  */
+//Going sloppy to avoid 'use strict' string cost, but strict practices should
+//be followed.
+/*jslint sloppy: true */
+/*global setTimeout: false */
+
+var requirejs, require, define;
+(function (undef) {
+    var main, req,
+        defined = {},
+        waiting = {},
+        config = {},
+        defining = {},
+        aps = [].slice;
+
+    /**
+     * Given a relative module name, like ./something, normalize it to
+     * a real name that can be mapped to a path.
+     * @param {String} name the relative name
+     * @param {String} baseName a real name that the name arg is relative
+     * to.
+     * @returns {String} normalized name
+     */
+    function normalize(name, baseName) {
+        var nameParts, nameSegment, mapValue, foundMap,
+            foundI, foundStarMap, starI, i, j, part,
+            baseParts = baseName && baseName.split("/"),
+            map = config.map,
+            starMap = (map && map['*']) || {};
+
+        //Adjust any relative paths.
+        if (name && name.charAt(0) === ".") {
+            //If have a base name, try to normalize against it,
+            //otherwise, assume it is a top-level require that will
+            //be relative to baseUrl in the end.
+            if (baseName) {
+                //Convert baseName to array, and lop off the last part,
+                //so that . matches that "directory" and not name of the baseName's
+                //module. For instance, baseName of "one/two/three", maps to
+                //"one/two/three.js", but we want the directory, "one/two" for
+                //this normalization.
+                baseParts = baseParts.slice(0, baseParts.length - 1);
+
+                name = baseParts.concat(name.split("/"));
+
+                //start trimDots
+                for (i = 0; i < name.length; i += 1) {
+                    part = name[i];
+                    if (part === ".") {
+                        name.splice(i, 1);
+                        i -= 1;
+                    } else if (part === "..") {
+                        if (i === 1 && (name[2] === '..' || name[0] === '..')) {
+                            //End of the line. Keep at least one non-dot
+                            //path segment at the front so it can be mapped
+                            //correctly to disk. Otherwise, there is likely
+                            //no path mapping for a path starting with '..'.
+                            //This can still fail, but catches the most reasonable
+                            //uses of ..
+                            break;
+                        } else if (i > 0) {
+                            name.splice(i - 1, 2);
+                            i -= 2;
+                        }
+                    }
+                }
+                //end trimDots
+
+                name = name.join("/");
+            }
+        }
+
+        //Apply map config if available.
+        if ((baseParts || starMap) && map) {
+            nameParts = name.split('/');
+
+            for (i = nameParts.length; i > 0; i -= 1) {
+                nameSegment = nameParts.slice(0, i).join("/");
+
+                if (baseParts) {
+                    //Find the longest baseName segment match in the config.
+                    //So, do joins on the biggest to smallest lengths of baseParts.
+                    for (j = baseParts.length; j > 0; j -= 1) {
+                        mapValue = map[baseParts.slice(0, j).join('/')];
+
+                        //baseName segment has  config, find if it has one for
+                        //this name.
+                        if (mapValue) {
+                            mapValue = mapValue[nameSegment];
+                            if (mapValue) {
+                                //Match, update name to the new value.
+                                foundMap = mapValue;
+                                foundI = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (foundMap) {
+                    break;
+                }
+
+                //Check for a star map match, but just hold on to it,
+                //if there is a shorter segment match later in a matching
+                //config, then favor over this star map.
+                if (!foundStarMap && starMap && starMap[nameSegment]) {
+                    foundStarMap = starMap[nameSegment];
+                    starI = i;
+                }
+            }
+
+            if (!foundMap && foundStarMap) {
+                foundMap = foundStarMap;
+                foundI = starI;
+            }
+
+            if (foundMap) {
+                nameParts.splice(0, foundI, foundMap);
+                name = nameParts.join('/');
+            }
+        }
+
+        return name;
+    }
+
+    function makeRequire(relName, forceSync) {
+        return function () {
+            //A version of a require function that passes a moduleName
+            //value for items that may need to
+            //look up paths relative to the moduleName
+            return req.apply(undef, aps.call(arguments, 0).concat([relName, forceSync]));
+        };
+    }
+
+    function makeNormalize(relName) {
+        return function (name) {
+            return normalize(name, relName);
+        };
+    }
+
+    function makeLoad(depName) {
+        return function (value) {
+            defined[depName] = value;
+        };
+    }
+
+    function callDep(name) {
+        if (waiting.hasOwnProperty(name)) {
+            var args = waiting[name];
+            delete waiting[name];
+            defining[name] = true;
+            main.apply(undef, args);
+        }
+
+        if (!defined.hasOwnProperty(name)) {
+            throw new Error('No ' + name);
+        }
+        return defined[name];
+    }
+
+    /**
+     * Makes a name map, normalizing the name, and using a plugin
+     * for normalization if necessary. Grabs a ref to plugin
+     * too, as an optimization.
+     */
+    function makeMap(name, relName) {
+        var prefix, plugin,
+            index = name.indexOf('!');
+
+        if (index !== -1) {
+            prefix = normalize(name.slice(0, index), relName);
+            name = name.slice(index + 1);
+            plugin = callDep(prefix);
+
+            //Normalize according
+            if (plugin && plugin.normalize) {
+                name = plugin.normalize(name, makeNormalize(relName));
+            } else {
+                name = normalize(name, relName);
+            }
+        } else {
+            name = normalize(name, relName);
+        }
+
+        //Using ridiculous property names for space reasons
+        return {
+            f: prefix ? prefix + '!' + name : name, //fullName
+            n: name,
+            p: plugin
+        };
+    }
+
+    function makeConfig(name) {
+        return function () {
+            return (config && config.config && config.config[name]) || {};
+        };
+    }
+
+    main = function (name, deps, callback, relName) {
+        var cjsModule, depName, ret, map, i,
+            args = [],
+            usingExports;
+
+        //Use name if no relName
+        relName = relName || name;
+
+        //Call the callback to define the module, if necessary.
+        if (typeof callback === 'function') {
+
+            //Pull out the defined dependencies and pass the ordered
+            //values to the callback.
+            //Default to [require, exports, module] if no deps
+            deps = !deps.length && callback.length ? ['require', 'exports', 'module'] : deps;
+            for (i = 0; i < deps.length; i += 1) {
+                map = makeMap(deps[i], relName);
+                depName = map.f;
+
+                //Fast path CommonJS standard dependencies.
+                if (depName === "require") {
+                    args[i] = makeRequire(name);
+                } else if (depName === "exports") {
+                    //CommonJS module spec 1.1
+                    args[i] = defined[name] = {};
+                    usingExports = true;
+                } else if (depName === "module") {
+                    //CommonJS module spec 1.1
+                    cjsModule = args[i] = {
+                        id: name,
+                        uri: '',
+                        exports: defined[name],
+                        config: makeConfig(name)
+                    };
+                } else if (defined.hasOwnProperty(depName) || waiting.hasOwnProperty(depName)) {
+                    args[i] = callDep(depName);
+                } else if (map.p) {
+                    map.p.load(map.n, makeRequire(relName, true), makeLoad(depName), {});
+                    args[i] = defined[depName];
+                } else if (!defining[depName]) {
+                    throw new Error(name + ' missing ' + depName);
+                }
+            }
+
+            ret = callback.apply(defined[name], args);
+
+            if (name) {
+                //If setting exports via "module" is in play,
+                //favor that over return value and exports. After that,
+                //favor a non-undefined return value over exports use.
+                if (cjsModule && cjsModule.exports !== undef &&
+                        cjsModule.exports !== defined[name]) {
+                    defined[name] = cjsModule.exports;
+                } else if (ret !== undef || !usingExports) {
+                    //Use the return value from the function.
+                    defined[name] = ret;
+                }
+            }
+        } else if (name) {
+            //May just be an object definition for the module. Only
+            //worry about defining if have a module name.
+            defined[name] = callback;
+        }
+    };
+
+    requirejs = require = req = function (deps, callback, relName, forceSync, alt) {
+        if (typeof deps === "string") {
+            //Just return the module wanted. In this scenario, the
+            //deps arg is the module name, and second arg (if passed)
+            //is just the relName.
+            //Normalize module name, if it contains . or ..
+            return callDep(makeMap(deps, callback).f);
+        } else if (!deps.splice) {
+            //deps is a config object, not an array.
+            config = deps;
+            if (callback.splice) {
+                //callback is an array, which means it is a dependency list.
+                //Adjust args if there are dependencies
+                deps = callback;
+                callback = relName;
+                relName = null;
+            } else {
+                deps = undef;
+            }
+        }
+
+        //Support require(['a'])
+        callback = callback || function () {};
+
+        //If relName is a function, it is an errback handler,
+        //so remove it.
+        if (typeof relName === 'function') {
+            relName = forceSync;
+            forceSync = alt;
+        }
+
+        //Simulate async callback;
+        if (forceSync) {
+            main(undef, deps, callback, relName);
+        } else {
+            setTimeout(function () {
+                main(undef, deps, callback, relName);
+            }, 15);
+        }
+
+        return req;
+    };
+
+    /**
+     * Just drops the config on the floor, but returns req in case
+     * the config return value is used.
+     */
+    req.config = function (cfg) {
+        config = cfg;
+        return req;
+    };
+
+    define = function (name, deps, callback) {
+
+        //This module may not have dependencies
+        if (!deps.splice) {
+            //deps is not an array, so probably means
+            //an object literal or factory function for
+            //the value. Adjust args.
+            callback = deps;
+            deps = [];
+        }
+
+        waiting[name] = [name, deps, callback];
+    };
+
+    define.amd = {
+        jQuery: true
+    };
+}());
+
+define("vendor/almond", function(){});
+
+define('sockethub/extend',[], function() {
+  function extend(target) {
+    var sources = Array.prototype.slice.call(arguments, 1);
+    sources.forEach(function(source) {
+      for(var key in source) {
+        if(typeof(source[key]) === 'object' &&
+           typeof(target[key]) === 'object') {
+          extend(target[key], source[key]);
+        } else {
+          target[key] = source[key];
+        }
+      }
+    });
+    return target;
+  }
+
+  return extend;
+});
 (function() {
   function getPromise(builder) {
     var promise;
@@ -554,7 +448,7 @@
         };
         if(result) {
           setTimeout(function() {
-            notifyConsumer(consumer);
+            notifyConsumer(consumer)
           }, 0);
         } else {
           consumers.push(consumer);
@@ -566,22 +460,687 @@
         resolve(true, arguments);
         return this;
       },
-
+      
       reject: function() {
         resolve(false, arguments);
         return this;
       }
-
+      
     };
+
     return promise;
-  }
+  };
 
   if(typeof(module) !== 'undefined') {
     module.exports = getPromise;
   } else if(typeof(define) === 'function') {
-    define([], function() { return getPromise; });
+    define('vendor/promising',[], function() { return getPromise; });
   } else if(typeof(window) !== 'undefined') {
     window.promising = getPromise;
   }
+
 })();
 
+define('sockethub/event_handling',[], function() {
+
+  var methods = {
+    /**
+     * Method: on
+     *
+     * Install an event handler for the given event name.
+     */
+    on: function(eventName, handler) {
+      this._validateEvent(eventName);
+      this._handlers[eventName].push(handler);
+    },
+
+    _emit: function(eventName) {
+      this._validateEvent(eventName);
+      var args = Array.prototype.slice.call(arguments, 1);
+      this._handlers[eventName].forEach(function(handler) {
+        handler.apply(this, args);
+      });
+    },
+
+    _validateEvent: function(eventName) {
+      if(! (eventName in this._handlers)) {
+        throw "Unknown event: " + eventName;
+      }
+    },
+
+    _delegateEvent: function(eventName, target) {
+      target.on(eventName, function(event) {
+        this._emit(eventName, event);
+      }.bind(this));
+    },
+
+    _addEvent: function(eventName) {
+      this._handlers[eventName] = [];
+    }
+  };
+
+  /**
+   * Function: eventHandling
+   *
+   * Mixes event handling functionality into an object.
+   *
+   * The first parameter is always the object to be extended.
+   * All remaining parameter are expected to be strings, interpreted as valid event
+   * names.
+   *
+   * Example:
+   *   (start code)
+   *   var MyConstructor = function() {
+   *     eventHandling(this, 'connected', 'disconnected');
+   *
+   *     this._emit('connected');
+   *     this._emit('disconnected');
+   *     // this would throw an exception:
+   *     //this._emit('something-else');
+   *   };
+   *
+   *   var myObject = new MyConstructor();
+   *   myObject.on('connected', function() { console.log('connected'); });
+   *   myObject.on('disconnected', function() { console.log('disconnected'); });
+   *   // this would throw an exception as well:
+   *   //myObject.on('something-else', function() {});
+   *
+   *   (end code)
+   */
+  return function(object) {
+    var eventNames = Array.prototype.slice.call(arguments, 1);
+    for(var key in methods) {
+      object[key] = methods[key];
+    }
+    object._handlers = {};
+    eventNames.forEach(function(eventName) {
+      object._addEvent(eventName);
+    });
+  };
+});
+
+define('sockethub/client',[
+  './extend',
+  '../vendor/promising',
+  './event_handling'
+], function(extend, promising, eventHandling) {
+
+  /**
+   * Class: SockethubClient
+   *
+   * Provides a boilerplate client, that knows no verbs and no meaning in the
+   * messages it processes, apart from the "rid" property.
+   *
+   * The client can then be extended with functionality, by using <declareVerb>,
+   * or be used directly by sending objects using <sendObject>.
+   *
+   * Constructor parameters:
+   *   jsonClient - a <JSONClient> instance
+   */
+  var SockethubClient = function(jsonClient, options) {
+    this.jsonClient = jsonClient;
+    this.options = options;
+
+    this._ridPromises = {};
+
+    eventHandling(this, 'connected', 'disconnected', 'failed', 'message', 'unexpected-response');
+
+    jsonClient.on('message', this._processIncoming.bind(this));
+    this._delegateEvent('connected', jsonClient);
+    this._delegateEvent('disconnected', jsonClient);
+    this._delegateEvent('failed', jsonClient);
+  };
+
+  SockethubClient.prototype = {
+
+    /**
+     * Method: declareVerb
+     *
+     * Declares a new verb for this client.
+     *
+     * Declaring a verb will:
+     *   - Add a method to the client, named like the verb.
+     *   - Convert positional arguments of that method into message attributes.
+     *   - Keep a template for messages sent using that verb.
+     *
+     * Parameters:
+     *   verb           - (string) name of the verb, such as "post"
+     *   attributeNames - (array) list of positional arguments for the verb method
+     *   template       - (object) template to build messages upon
+     *
+     * Example:
+     *   (start code)
+     *
+     *   // declare the "register" verb:
+     *   client.declareVerb('register', ['object'], {
+     *     platform: 'dispatcher'
+     *   });
+     *
+     *   // send a "register" message, using the just declared method:
+     *   client.register({ secret: '123' });
+     *
+     *   // will send the following JSON:
+     *   {
+     *     "verb": "register",
+     *     "platform": "dispatcher",
+     *     "object": {
+     *       "secret": "123"
+     *     },
+     *     "rid": 1
+     *   }
+     *
+     *   (end code)
+     *
+     * Receiving the response:
+     *   The declared method returns a promise, which will notify you as soon as
+     *   a response with the right "rid" is received.
+     *
+     * Example:
+     *   (start code)
+     *
+     *   client.register({ secret: 123 }).
+     *     then(function(response) {
+     *       // response received
+     *     }, function(error) {
+     *       // something went wrong
+     *     });
+     *
+     *   (end code)
+     *
+     * Nested attributes:
+     *   If you want your verb methods to be able to modify deeply nested JSON
+     *   structures through positional arguments, you can specify the path using
+     *   dot notation.
+     *
+     * Example:
+     *   (start code)
+     *
+     *   client.declareVerb('set', ['target.platform', 'object'], {
+     *     platform: "dispatcher",
+     *     target: {}
+     *   });
+     *
+     *   client.set("smtp", {
+     *     server: "example.com"
+     *   });
+     *
+     *   // passing in "smtp" as "platform" here does not alter the toplevel
+     *   // "platform" attribute, but instead adds one to "target":
+     *   {
+     *     "verb": "set",
+     *     "platform": "dispatcher",
+     *     "target": {
+     *       "platform": "smtp"
+     *     },
+     *     "object": {
+     *       "server": "example.com"
+     *     }
+     *   }
+     *
+     *   (end code)
+     */
+    declareVerb: function(verb, attributeNames, template, decorator) {
+      this[verb] = function() {
+        // 
+        var args = Array.prototype.slice.call(arguments);
+        var object = extend({}, template, { verb: verb });
+        attributeNames.forEach(function(attrName, index) {
+          var value = args[index];
+          var current = this._getDeepAttr(object, attrName);
+          if(typeof(current) === 'undefined' && typeof(value) === 'undefined') {
+            throw new Error(
+              "Expected a value for parameter " + attrName + ", but got undefined!"
+            );
+          }
+          this._setDeepAttr(object, attrName, value);
+        }.bind(this));
+        var extensionArg = args[attributeNames.length];
+        if(typeof(extensionArg) === 'object') {
+          extend(object, extensionArg);
+        }
+        return this.sendObject(object);
+      };
+      if(decorator) {
+        this[verb] = decorator(this[verb].bind(this));
+      }
+    },
+
+    declareEvent: function(eventName) {
+      this._addEvent(eventName);
+    },
+
+    disconnect: function() {
+      this.jsonClient.disconnect();
+    },
+
+    // incremented upon each call to sendObject
+    _ridCounter: 0,
+
+    /**
+     * Method: sendObject
+     *
+     * Sends the object through the JSONClient, attaching a "rid" attribute to
+     * link it to a response.
+     *
+     * Returns a promise, which will be fulfilled as soon as a response carrying
+     * the same "rid" attribute is received.
+     *
+     * You can either call this directly, building messages by hand or first
+     * declare a verb using <declareVerb>, which will then call sendObject for you.
+     *
+     */
+    sendObject: function(object) {
+      var promise = promising();
+      // generate a new rid and store promise reference:
+      var rid = ++this._ridCounter;
+      this._ridPromises[rid] = promise;
+      object = extend(object, { rid: rid });
+      console.log('SEND', object);
+      // non-dectructively add 'rid' and send!
+      this.jsonClient.send(object);
+      return promise;
+    },
+
+    // _getDeepAttr / _setDeepAttr are used in declareType.
+
+    _getDeepAttr: function(object, path, _parts) {
+      var parts = _parts || path.split('.');
+      var next = object[parts.shift()];
+      return parts.length ? this._getDeepAttr(next, undefined, parts) : next;
+    },
+
+    _setDeepAttr: function(object, path, value, _parts) {
+      var parts = _parts || path.split('.');
+      if(parts.length > 1) {
+        this._setDeepAttr(object[parts.shift()], undefined, value, parts);
+      } else {
+        object[parts[0]] = value;
+      }
+    },
+
+    _processIncoming: function(object) {
+      console.log(object.verb === 'confirm' ? 'CONFIRM' : 'RECEIVE', object);
+      var rid = object.rid;
+      if(typeof(rid) !== 'undefined') {
+        var promise = this._ridPromises[rid];
+        if(promise) {
+          // rid is known.
+          if(object.verb === 'confirm') {
+            // exception: confirm results are ignored, unless their status is fals
+            if(object.status) {
+              return;
+            } else {
+              promise.reject(object);
+            }
+          } else {
+            promise.fulfill(object);
+          }
+          delete this._ridPromises[rid];
+        } else {
+          // rid is not known. -> unexpected response!
+          this._emit('unexpected-response', object);
+        }
+      } else {
+        // no rid set. -> this is not a response, but a message!
+        this._emit('message', object);
+      }
+    }
+
+  };
+
+  return SockethubClient;
+
+});
+
+define('sockethub/json_client',['./event_handling'], function(eventHandling) {
+
+  /**
+   * Class: JSONClient
+   *
+   * Exchanges JSON messages via a WebSocket
+   *
+   * Parameters:
+   *   socket - a WebSocket object
+   *
+   */
+  var JSONClient = function(socket) {
+    this.socket = socket;
+
+    eventHandling(
+      this,
+
+      /**
+       * Event: message
+       *
+       * Emitted when a new JSON message is received.
+       *
+       * Parameters:
+       *   object - the unpacked JSON object
+       *
+       */
+      'message',
+
+      /**
+       * Event: connected
+       *
+       * Emitted when the websocket is opened.
+       */
+      'connected',
+
+      /**
+       * Event: disconnected
+       *
+       * Emitted when the websocket is closed.
+       */
+      'disconnected',
+
+      /**
+       * Event: disconnected
+       *
+       * Emitted when the websocket connection failed.
+       */
+      'failed'
+    );
+
+    // start listening.
+    this._listen();
+  };
+
+  JSONClient.prototype = {
+
+    /**
+     * Method: send
+     *
+     * Serialize given object and send it.
+     */
+    send: function(object) {
+      this.socket.send(JSON.stringify(object));
+    },
+
+    /**
+     * Method: disconnect
+     *
+     * Close the socket.
+     */
+    disconnect: function() {
+      this.socket.close();
+    },
+
+    // Start listening on socket
+    _listen: function() {
+      this.socket.onmessage = this._processMessageEvent.bind(this);
+      this.connected = false;
+      this.socket.onopen = function() {
+        this.connected = true;
+        this._emit('connected');
+      }.bind(this);
+      this.socket.onclose = function() {
+        if(this.connected) {
+          this._emit('disconnected');
+          this.connected = false;
+        } else {
+          this._emit('failed');
+        }
+      }.bind(this);
+    },
+
+    // Emit "message" event 
+    _processMessageEvent: function(event) {
+      this._emit('message', JSON.parse(event.data));
+    }
+
+  };
+
+  return JSONClient;
+
+});
+
+define('sockethub/connect',[
+  './extend',
+  './json_client',
+  './client'
+], function(extend, JSONClient, SockethubClient) {
+
+  var DEFAULT_PORT = 10550;
+  var DEFAULT_PATH = '/sockethub';
+  var DEFAULT_PROTOCOL = 'sockethub';
+
+  /**
+   * Method: SockethubClient.connect
+   *
+   * Singleton method, used to construct a new client.
+   *
+   * Takes either a URI or an Object with connection options as it's only argument.
+   * Returns a new <SockethubClient> instance, connected to a WebSocket through a
+   * <JSONClient>.
+   */
+  var connect = function(uriOrOptions, options) {
+    var uri;
+    if(typeof(options) !== 'object') {
+      options = {};
+    }
+
+    if(typeof(uriOrOptions) === 'string' &&
+       ! uriOrOptions.match(/wss?\:\/\//)) {
+      uriOrOptions = { host: uriOrOptions };
+    }
+
+    if(typeof(uriOrOptions) === 'string') {
+      uri = uriOrOptions;
+    } else if(typeof(uriOrOptions) === 'object') {
+      extend(options, uriOrOptions);
+      if(! options.host) {
+        throw "Required 'host' option not present";
+      }
+      if(! options.port) {
+        options.port = DEFAULT_PORT;
+      }
+      if(! options.path) {
+        options.path = DEFAULT_PATH;
+      }
+      uri = (
+        (options.ssl ? 'wss' : 'ws')
+          + '://'
+          + options.host
+          + ':'
+          + options.port
+          + options.path
+      );
+    } else {
+      throw "SockethubClient.connect expects a URI, specified via a String or Object.";
+    }
+    return new SockethubClient(new JSONClient(new WebSocket(uri, DEFAULT_PROTOCOL)), options);
+  };
+
+  return connect;
+
+});
+
+define('sockethub/remoteStorage',[], function() {
+
+  var module = function(privateClient, publicClient) {
+    privateClient.declareType('config', {
+      "description" : "sockethub config file",
+      "type" : "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "the hostname to connect to",
+          "format": "uri",
+          "required": true
+        },
+        "port": {
+          "type": "number",
+          "description": "the port number to connect to",
+          "required": true
+        },
+        "secret": {
+          "type": "string",
+          "description": "the secret to identify yourself with the sockethub server",
+          "required": true
+        }
+      }
+    });
+
+    return {
+      exports: {
+        getConfig: function() {
+          return privateClient.getObject('config.json');
+        },
+        writeConfig: function(data) {
+          //console.log(' [RS] writeConfig()');
+          return privateClient.storeObject('config', 'config.json', data);
+        }
+      }
+    };
+  };
+
+  function connectRemoteStorage(remoteStorage) {
+    remoteStorage.defineModule('sockethub', module);
+    remoteStorage.access.claim('sockethub', 'rw');
+
+    var token = remoteStorage.getBearerToken();
+    if(typeof(token) === "string" && token.length > 0) {
+      if(! this.options.register) {
+        this.options.register = {};
+      }
+      // FIXME: this basically copies remoteStorage.access._scopeModeMap, which is
+      //   private. Instead remoteStorage.js should give public access to the scope
+      //   mode map.
+      var scope = {};
+      remoteStorage.access.scopes.forEach(function(key) {
+        scope[key] = remoteStorage.access.get(key);
+      });
+
+      var storageInfo = remoteStorage.getStorageInfo();
+      storageInfo.type = String(storageInfo.type); // wtf?
+
+      this.options.register.remoteStorage = {
+        storageInfo: storageInfo,
+        bearerToken: token,
+        scope: scope
+      }
+    }
+  }
+
+  return connectRemoteStorage;
+
+});
+define('verbs/core',[], function() {
+
+  var coreVerbs = function(client) {
+
+    // Verb: ping
+    //
+    // Sends a "ping" command to the sockethub and calculates it's offset
+    // upon a reply.
+    //
+    // Example:
+    //   (start code)
+    //
+    //   var client = SockethubClient.connect({ host: 'localhost' });
+    //
+    //   client.on('connected', function() {
+    //     client.register({ secret: '123' }).
+    //       then(function() {
+    //         return client.ping();
+    //       }).
+    //       then(function(response) {
+    //         console.log('sockethub reply received after: ' + response.offset + 'ms');
+    //       }, function(error) {
+    //         console.log('sending ping failed: ' + error.message);
+    //       });
+    //   });
+    //
+    //   (end code)
+    //
+    client.declareVerb('ping', [], {
+      platform: 'dispatcher'
+    }, function(method) {
+      return function(object) {
+        if(typeof(object) !== 'object') {
+          object = {};
+        }
+        if(typeof(object.timestamp) !== 'number') {
+          object.timestamp = new Date().getTime();
+        }
+        return method(object).
+          then(function(result) {
+            result.offset = new Date().getTime() - object.timestamp;
+            return result;
+          });
+      };
+    });
+
+
+    // Verb: register
+    client.declareVerb('register', ['object'], {
+      platform: 'dispatcher',
+    }, function(method) {
+      return function() {
+        return method.apply(this, arguments).then(function(response) {
+          if(! response.status) {
+            setTimeout(function() {
+              client._emit('registration-failed', response);
+            }, 0);
+            throw "Registration failed: " + response.message;
+          }
+          setTimeout(function() { client._emit('registered'); }, 0);
+          return response;
+        });
+      };
+    });
+
+    // Event: registered
+    //
+    // Fired when registration succeeded.
+    client.declareEvent('registered');
+
+    // Event: registration-failed
+    //
+    // Fired when registration failed.
+    client.declareEvent('registration-failed');
+
+    // Automatic registration, when 'register' option was passed during 'connect'.
+    client.on('connected', function() {
+      console.log('automatic registration!', client.options);
+      if(client.options.register) {
+        console.log('automatic registration!');
+        client.register(client.options.register);
+      }
+    });
+
+
+    // Verb: set
+    client.declareVerb('set', ['target.platform', 'object'], {
+      platform: 'dispatcher',
+      target: {}
+    });
+
+  };
+
+  return coreVerbs;
+});
+
+define('sockethub-client',[
+  'sockethub/client',
+  'sockethub/connect',
+  'sockethub/remoteStorage',
+  'verbs/core'
+], function(SockethubClient, connect, connectRemoteStorage, coreVerbs) {
+
+  SockethubClient.connect = function() {
+    var client = connect.apply(this, arguments);
+    // extend the client with core verbs
+    coreVerbs(client);
+    return client;
+  }
+
+  SockethubClient.prototype.connectStorage = connectRemoteStorage;
+
+  return SockethubClient;
+
+});
+
+    return require('sockethub-client');
+}));
