@@ -46,7 +46,6 @@ function init(){
         }
      }
     if(keys) {
-        var sc;
         var sockethubClient = SockethubClient.connect({
             host: 'wss://unht-beta.heahdk.net:10550',
         }).then(function (connection) { // connected
