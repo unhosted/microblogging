@@ -48,12 +48,12 @@ function init(){
     if(keys) {
         var sc;
         var sockethubClient = SockethubClient.connect({
-            host: 'ws://unht-beta.heahdk.net:10550',
+            host: 'wss://unht-beta.heahdk.net:10550',
         }).then(function (connection) { // connected
             sc = connection;
             sc.register({
                 secret: "1234567890"
-            }).then(initListeners, function () {
+            }).then(initListeners, function (e) {
                 console.log('failed registering: ', e);
             });
         }, function (e) {
@@ -63,22 +63,31 @@ function init(){
 }
 
 function initListeners() {
-    sc.on('message', function (data) {
-        console.log('SH received message');
-    });
+    console.log('init message listener');
+//    sc.on('message', function (data) {
+//        console.log('SH received message');
+//    });
+    console.log('init error listener');
     sc.on('error', function (data) {
         console.log('SH received error: ', data);
     });
+    console.log('init response listener');
     sc.on('response', function (data) {
         console.log('SH received response: ', data);
     });
+    console.log('init close listener');
     sc.on('close', function (data) {
         console.log('SH received close: ', data);
     });
+    console.log('submitting custom.post(keys)');
     sc.submit({
         platform: 'custom',
         verb: 'post',
         object: keys
+    }, 10000).then(function (response) {
+        console.log('post sucessful, heres the response: ', response);
+    }, function (err) {
+        console.log('oh no! ', err);
     });
 }
 
