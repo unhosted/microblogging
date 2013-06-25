@@ -35,7 +35,15 @@ function init(){
 	    get_profile(base_url+'/profile/me');
 	}
     }
-}
+    if(options.keys) {
+      try {
+        keys = JSON.parse(options.keys);
+        console.log('parse success', keys);
+      } catch(e) {
+        console.log('parse failure', options.keys);
+      }
+    }
+}      
 
 
 function new_post(data){
