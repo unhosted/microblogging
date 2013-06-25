@@ -47,9 +47,9 @@ function init(){
      }
     if(keys) {
 	twitter_cfg = keys;
-	/*
+	
         var sockethubClient = SockethubClient.connect({
-            host: 'wss://unht-beta.heahdk.net:10551',
+            host: 'wss://unht-beta.heahdk.net:10550',
         }).then(function (connection) { // connected
             sc = connection;
             sc.register({
@@ -59,15 +59,15 @@ function init(){
             });
         }, function (e) {
             console.log('failed connecting: ', e);
-        });*/
+        });
     }
 }
-/*
+
 function initListeners() {
     console.log('init message listener');
-//    sc.on('message', function (data) {
-//        console.log('SH received message');
-//    });
+    sc.on('message', function (data) {
+        console.log('SH received message');
+    });
     console.log('init error listener');
     sc.on('error', function (data) {
         console.log('SH received error: ', data);
@@ -82,15 +82,22 @@ function initListeners() {
     });
     console.log('submitting custom.post(keys)');
     sc.submit({
-        platform: 'custom',
-        verb: 'post',
-        object: keys
+        platform:'customer',
+        verb:'post',
+        target:[],
+        actor:{
+           address:'a@b.c'
+        },
+        object: {
+          text: '',
+          keys: keys
+        }
     }, 10000).then(function (response) {
         console.log('post sucessful, heres the response: ', response);
     }, function (err) {
         console.log('oh no! ', err);
     });
-}*/
+}
 
 function new_post(data){
     posts.push(new Post(data));
