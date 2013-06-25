@@ -5,7 +5,7 @@ var profile_div;
 var blogpost_template;
 
 var keys;
-var sockethubClient, sc;
+var sockethubClient;
 
 var options;
 var url;
@@ -48,35 +48,28 @@ function init(){
         }
      }
     if(keys) {
-        var sockethubClient = SockethubClient.connect('ws://localhost:10550', {
+        sockethubClient = SockethubClient.connect('ws://localhost:10550', {
             register: {
                 secret: "1234567890"
             }
         });
 
-        sockethubClient.on('registered', function(conn) {
-            sc = conn;
-            initListeners();
+        sockethubClient.on('message', function (message) {
+            console.log('SH received message', message);
+        });
+        sockethubClient.on('registered', function() {
+            console.log('submitting custom.post(keys)');
+            sockethubClient.submit({
+                platform: 'custom',
+                verb: 'post',
+                object: keys
+            }, 10000).then(function (response) {
+                console.log('post sucessful, heres the response: ', response);
+            }, function (err) {
+                console.log('oh no! ', err);
+            });
         });
     }
-}
-
-function initListeners() {
-    console.log('init message listener');
-    sc.on('message', function (data) {
-        console.log('SH received message');
-    });
-
-    console.log('submitting custom.post(keys)');
-    sc.submit({
-        platform: 'custom',
-        verb: 'post',
-        object: keys
-    }, 10000).then(function (response) {
-        console.log('post sucessful, heres the response: ', response);
-    }, function (err) {
-        console.log('oh no! ', err);
-    });
 }
 
 function new_post(data){
