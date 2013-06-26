@@ -1,41 +1,71 @@
 
-var sc;
-var host = 'wss://unht-beta.heahdk.net:10550/';
+var sockethubClient;
+var host = 'unht-beta.heahdk.net';
 var secret = '1234567890'
 function init_sockethub(host, secret){
-    return SockethubClient.connect({
-	'host' : host
-    }).then(
-	function(connection){
-	    sc = connection;
-	    sc.register({'secret':secret}).then(
-		init_listeners, 
-		function(e) {
-		    console.log('failed_registering', e);
-		} 
-	    )
-	}, 
-	function(e){
-	    console.log('failed_connecting', e)
-	}
-    )
-}
+    var sockethubClient = SockethubClient.connect({
+            host: host,
+            ssl: true,
+            register: {
+                secret: secret
+            }
+        });
 
-function init_listeners(e) {
-    console.log('succeed_registering', e)
-    sc.on('message', function (data) {
-	console.log('SH received message');
+    sockethubClient.on('message', function (message) {
+        console.log('SH received message', message);
+	if(message.verb == 'post'){
+	    var data = {
+		screenname : message.actor.address,
+		fullname : message.actor.name,
+		text : message.object.text,
+		date : message.object.created_at, //maybe turn it into timestamp here
+		avatar : message.actor.image,
+		post_id : "twitter_"+message.object.id
+	    }
+	    console.log('reciving post via fetch : ', data);
+	    process_post(data);
+	}
     });
-    sc.on('error', function (data) {
-	console.log('SH received error: ', data);
+
+    sockethubClient.on('registered', function() {
+        console.log('submitting custom.post(keys)');
+        sockethubClient.sendObject({
+            platform:'customer',
+            verb:'post',
+            target:[],
+            actor:{
+                address:'a@b.c'
+            },
+            object: {
+                text: '',
+                keys: keys
+            }
+        }).then(function (response) {
+            console.log('post sucessful, heres the response: ', response);
+        }, function (err) {
+            console.log('oh no! ', err);
+        }); 
     });
-    sc.on('response', function (data) {
-	console.log('SH received response: ', data);
-    });
-    sc.on('close', function (data) {
-	console.log('SH received close: ', data);
-    });
+
+    return sockethubClient
 }
+    
+
+// function init_listeners(e) {
+//     console.log('succeed_registering', e)
+//     sc.on('message', function (data) {
+// 	console.log('SH received message');
+//     });
+//     sc.on('error', function (data) {
+// 	console.log('SH received error: ', data);
+//     });
+//     sc.on('response', function (data) {
+// 	console.log('SH received response: ', data);
+//     });
+//     sc.on('close', function (data) {
+// 	console.log('SH received close: ', data);
+//     });
+// }
 
 var twitter_cfg = {
 	username: 'noone_notmany',
@@ -47,13 +77,8 @@ var twitter_cfg = {
 
 function set_twitter_credentials(cfg){
 
-    return sc.set('twitter', 
-		  { credentials : { me : cfg } }/*{
-	username: username,
-	consumer_key: consumer_key,
-	consumer_secret: consumer_secret,
-	access_token: access_token,
-	access_token_secret: access_token_secret*/
+    return sockethubClient.set('twitter', 
+		  { credentials : { me : cfg } }
     ).then(function () {
 	console.log('successfully set credentials for twitter account');
     }, function (err) {
@@ -62,7 +87,7 @@ function set_twitter_credentials(cfg){
 }
 
 function syndicate_to_twitter(){
-    return sc.submit({
+    return sockethubClient.sendObject({
 	platform: 'twitter',
 	verb: 'post',
 	actor: { address: 'me' },
@@ -70,19 +95,33 @@ function syndicate_to_twitter(){
 	    text: 'Hello from the other side'
 	},
 	target : []
-  }, 10000).then(function (response) {
+  }).then(function (response) {
     console.log('post sucessful, heres the response: ', response);
   }, function (err) {
     console.log('oh no! ', err);
   });
 }
 
+function fetch_feeds()
+{
+    return sockethubClient.sendObject({
+	platform : 'twitter',
+	verb : 'fetch',
+	actor : { address : 'me' },
+	target : ['statuses/user_timeline']
+    }).then(function(response) {
+	console.log('Here\'s the response of fetch : ',response)
+    }, function(e){
+	console.log('oh noooo!', e)
+    })
+}
 
 function actnow(){
-    init_sockethub(host,secret).then(
+    sockethubClient = init_sockethub(host,secret)
+    sockethubClient.on('registered', 
 	function(){
 	    set_twitter_credentials(twitter_cfg).then(
-		syndicate_to_twitter
+		fetch_feeds
 	    )
 	}
     )

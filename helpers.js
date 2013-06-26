@@ -45,7 +45,12 @@ function fill_div(div,props, data){
 
 function get_url(url, callback){
     function reqListener () {
-	callback(JSON.parse(this.responseText));
+	if( this.status == 200 ){
+	    callback(JSON.parse(this.responseText));
+	}
+	else{
+	    console.error(this.statusCode,this);
+	}
     };
     var request = new XMLHttpRequest();
     request.open("GET", url, true);
