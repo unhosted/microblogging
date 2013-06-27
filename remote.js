@@ -4,7 +4,9 @@ function init_remotestorage(){
 
     remoteStorage.claimAccess(
 	{ 'microblog':'rw',
-	  'profile':'rw'
+	  'profile':'rw',
+	  'sockethubcredentials': 'rw',  //those two should probably change
+	  'twittercredentials': 'rw'
 	}
     );
     remoteStorage.displayWidget();
@@ -17,53 +19,7 @@ function init_remotestorage(){
     //remoteStorage.microblog.on('change',function(e){})
     // TODO ask someone why this is wrong
 
-    remoteStorage.on('ready', 
-	function(){	
-	    forEach(document.getElementsByClassName('remote'), function(el){
-		el.style.display = 'block'
-	    })
-	    // load profile from rs
-	    remoteStorage.profile.load().then(
-		function(me){
-		    console.log('profile form rs',me);
-		    if(me){
-			set_profile(me);
-		    } else { 
-			throw "no profile yet?" 
-		    }
-		    console.log(f(profile_div,'edit'));
-		   
-		}).then(undefined, function(e){
-		    console.error(" unable to load profile: ",e)
-		    var me = 	me = {'screenname' : '',
-			      'name' : '',
-			      'description' : '',
-			      'location' : '',
-			      'homepage' : '',
-			      'profile_image_url' : ''}
-		   
-		    
-		    f(profile_div,'edit').onclick = edit_profile_callback.bind(me);
-		})
-	    
-	    // load posts from rs
-	    console.log('loading posts from rs')
-	    remoteStorage.microblog.list().then(
-		function(l){
-		    console.log(l);
-		    l.forEach( function(p){
-			console.log(p);
-			remoteStorage.microblog.load(p).then(
-			    new_post
-			)
-		    })
-		}
-		, function(e){
-		    console.log("error while loading  posts ", e); 
-		})
-
-	}
-     )
+    remoteStorage.on('ready',rs_on_ready  )
     
     remoteStorage.on('disconnect',
 		     function()
@@ -84,7 +40,52 @@ function init_remotestorage(){
 
 }
 
-
+function rs_on_ready(){	
+    forEach(document.getElementsByClassName('remote'), function(el){
+	el.style.display = 'block'
+    })
+    // load profile from rs
+    remoteStorage.profile.load().then(
+	function(me){
+	    console.log('profile form rs',me);
+	    if(me){
+		set_profile(me);
+	    } else { 
+		throw "no profile yet?" 
+	    }
+	    console.log(f(profile_div,'edit'));
+	    
+	}).then(undefined, function(e){
+		    console.error(" unable to load profile: ",e)
+	    var me = 	me = {'screenname' : '',
+			      'name' : '',
+			      'description' : '',
+			      'location' : '',
+			      'homepage' : '',
+			      'profile_image_url' : ''}
+	    
+		    
+	    f(profile_div,'edit').onclick = edit_profile_callback.bind(me);
+	})
+    
+    // load posts from rs
+    console.log('loading posts from rs')
+    remoteStorage.microblog.list().then(
+	function(l){
+	    console.log(l);
+	    l.forEach( function(p){
+		console.log(p);
+		remoteStorage.microblog.load(p).then(
+		    new_post
+		)
+	    })
+	}
+	, function(e){
+	    console.log("error while loading  posts ", e); 
+	})
+    
+}
+     
 function process_post(data){
 
     remoteStorage.microblog.load(data.post_id).then(

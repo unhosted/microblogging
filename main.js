@@ -25,6 +25,10 @@ function init(){
     gui_post_ids = 0;
     blogpost_template = document.getElementById('blogpost_template');
 
+    if(options.keys) {
+	registration_init(options)
+    }
+    
 
     if(options.me == 'true'){
         init_remotestorage();
@@ -35,20 +39,7 @@ function init(){
           get_profile(base_url+'/profile/me');
         }
     }
-    if(options.keys) {
-        if(options.keys.substr(-1) == '/') {
-            options.keys = options.keys.substr(0, options.keys.length - 1);
-        }
-        try {
-            keys = JSON.parse(options.keys);
-            console.log('parse success', keys);
-        } catch(e) {
-            console.log('parse failure', options.keys);
-        }
-     }
-    if(keys) {
-	twitter_cfg = keys;
-    }
+    
 }
 
 

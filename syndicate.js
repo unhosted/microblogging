@@ -1,17 +1,12 @@
 
 var sockethubClient;
-var host = 'unht-beta.heahdk.net';
-var secret = '1234567890'
-function init_sockethub(host, secret){
-    var sockethubClient = SockethubClient.connect({
-            host: host,
-            ssl: true,
-            register: {
-                secret: secret
-            }
-        });
 
-    sockethubClient.on('message', function (message) {
+function init_sockethub(cfg){
+    var sockethubClient = SockethubClient.connect(cfg);
+    return sockethubClient
+}
+
+function process_response(message) {
         console.log('SH received message', message);
 	if(message.verb == 'post'){
 	    var data = {
@@ -25,31 +20,17 @@ function init_sockethub(host, secret){
 	    console.log('reciving post via fetch : ', data);
 	    process_post(data);
 	}
-    });
+    }
 
-    sockethubClient.on('registered', function() {
-        console.log('submitting custom.post(keys)');
-        sockethubClient.sendObject({
-            platform:'customer',
-            verb:'post',
-            target:[],
-            actor:{
-                address:'a@b.c'
-            },
-            object: {
-                text: '',
-                keys: keys
-            }
-        }).then(function (response) {
-            console.log('post sucessful, heres the response: ', response);
-        }, function (err) {
-            console.log('oh no! ', err);
-        }); 
-    });
+function sockethub_eventlisteners(sockethubClient){
+    sockethubClient.on('message', process_response);
 
-    return sockethubClient
-}
-    
+    remoteStorage.twittercredentials.get('profile-twitter').then(
+	function(cfg){
+	    set_twitter_credentials(cfg);    
+	}
+    )
+}    
 
 // function init_listeners(e) {
 //     console.log('succeed_registering', e)
@@ -67,14 +48,14 @@ function init_sockethub(host, secret){
 //     });
 // }
 
-var twitter_cfg = {
+var twitter_cfg /*= {
 	username: 'noone_notmany',
 	consumer_key: '3QeJdNd1DwUcGkRYCNGQ',
 	consumer_secret: 'bfJD6ztBF2zvWFRUYVDTqggpqdD2zxKKzvN44qfLdp4',
 	access_token: '1527612912-R2jfLkRbFawh0tT41LO5fFXi4RjtWfCPKr0yFnV',
 	access_token_secret: 'RsDXzxoTGkwvCSl869lOWlruh18SqPhRfhoPI6h1aAA'
     }
-
+*/
 function set_twitter_credentials(cfg){
 
     return sockethubClient.set('twitter', 
@@ -102,13 +83,15 @@ function syndicate_to_twitter(){
   });
 }
 
-function fetch_feeds()
+function fetch_tweets(target)
 {
+    if(!target)
+	target = 'user'
     return sockethubClient.sendObject({
 	platform : 'twitter',
 	verb : 'fetch',
 	actor : { address : 'me' },
-	target : ['statuses/user_timeline']
+	target : [target]
     }).then(function(response) {
 	console.log('Here\'s the response of fetch : ',response)
     }, function(e){
@@ -117,12 +100,20 @@ function fetch_feeds()
 }
 
 function actnow(){
-    sockethubClient = init_sockethub(host,secret)
-    sockethubClient.on('registered', 
-	function(){
-	    set_twitter_credentials(twitter_cfg).then(
-		fetch_feeds
-	    )
+    remoteStorage.sockethubcredentials.get('profile-sockethub').then(
+	function(cfg){
+	    sockethubClient = init_sockethub(cfg)
+	    sockethubClient.on('registered', 
+			       function(){
+				   remoteStorage.twittercredentials.get('profile-twitter').then(
+				       function(twitter_cfg){
+					   set_twitter_credentials(twitter_cfg).then(
+					       fetch_feeds
+					   )
+				       }
+				   )
+			       }
+			      )
 	}
     )
 }
