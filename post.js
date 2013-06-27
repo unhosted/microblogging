@@ -1,8 +1,11 @@
 
 
 function Post(data){
+    if(!data){
+	data = {};
+    }
     var props = ['created_at',  'text', 'fullname', 'screenname']
-    data.created_at = (new Date(data['date'])).toString();
+    data.created_at = (new Date(data.date)).toString();
     Object.keys(data).forEach(function(key){
 	var t;	
 	if( !( t = data[key] ) )
@@ -10,26 +13,27 @@ function Post(data){
 	this[key] = t;
     }.bind(this));
 
-    this.id = post_ids++
-
+    this.gui_post_id = gui_post_ids++
+    
     this.div = function(){
 	var item = list_first(
 	    document.getElementsByClassName('blogpost'),
 	    function(item){
-		return (item.dataset['id'] == this.id);
+		return (item.dataset['gui_post_id'] == this.gui_post_id);
 	    }.bind(this)
 	)
 	
 	if(!item) {
-	    console.log("creating new Post : ", this.id)
+	    console.log("creating new Post : ", this.gui_post_id)
 	    item = blogpost_template.cloneNode(true);
 	    item.id = "";
-	    item.dataset.id = this.id;
-	    item.dataset.uuid = this.uuid;
+	    item.dataset.gui_post_id = this.gui_post_id;
+	    item.dataset.post_id = this.post_id;
 	    f(item, 'delete').onclick = function(){
 		delete_post(this)
 	    }.bind(this)
 	    fill_div(item, props, this);
+	    f(item, 'avatar').src = this.avatar;
 	    feeds_div.insertBefore(item, feeds.firstElementChild);
 	}
 	return item;
@@ -50,4 +54,8 @@ function Post(data){
 
     this.div();
 
+}
+
+function new_post(data){
+    posts.push(new Post(data));
 }
