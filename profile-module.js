@@ -34,16 +34,16 @@ remoteStorage.defineModule('profile',
 		  return keys;
 	      },
 	      'save' : function(data){
-		  // publicClient.getObject('me').then( 
-		  //     function(old_data){
-		  // 	  keys.forEach( function(k){
-		  // 	      if(data[k]===undefined)
-		  // 		  data[k] = old_data[k]
-		  // 	  })
-			  return publicClient.storeObject('profile', 'me',data);
+		  publicClient.getObject('me').then( 
+		       function(old_data){
+		   	  keys.forEach( function(k){
+		   	      if(data[k]===undefined)
+		   		  data[k] = old_data[k]
+		   	  })
+			   return publicClient.storeObject('profile', 'me',data);
 		      
-	          //         }
-		  // )
+	               }
+		  )
 	  
 	      },
 	      'template' : function(){
@@ -68,7 +68,10 @@ remoteStorage.defineModule('profile',
 	      },
 	      /*'link' : function(){
 		  return publicClient.getItemURL('profile.html');
-	      }*/
+	      },*/
+	      'onchange' : function(callback){
+		  return publicClient.on('change', callback);
+	      }
 	   
 	  }
       }

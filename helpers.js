@@ -1,3 +1,9 @@
+function post_by_id(post_id){
+    return list_first(posts, function(post){
+	return post.post_id == post_id;
+    })
+}
+
 function list_first(items, func){
     var len = items.length
     for(var i = 0; i < len; i++){
@@ -58,3 +64,4 @@ function get_url(url, callback){
     request.setRequestHeader('Content-Type', 'aplication/json');
     request.send();
 }
+

@@ -4,7 +4,7 @@ function Post(data){
     if(!data){
 	data = {};
     }
-    var props = ['created_at',  'text', 'fullname', 'screenname']
+var props = ['created_at',  'text', 'fullname', 'screenname']
     data.created_at = (new Date(data.date)).toString();
     Object.keys(data).forEach(function(key){
 	var t;	
@@ -14,6 +14,19 @@ function Post(data){
     }.bind(this));
 
     this.gui_post_id = gui_post_ids++
+
+    this.fill_post = function(item, data){
+	if(!item)
+	    item = this.div();
+	if(!data)
+	    data = this;
+	f(item, 'delete').onclick = function(){
+	    delete_post(this)
+	}.bind(this)
+	fill_div(item, props, data);
+	f(item, 'avatar').src = data.avatar;
+
+    }
     
     this.div = function(){
 	var item = list_first(
@@ -29,11 +42,7 @@ function Post(data){
 	    item.id = "";
 	    item.dataset.gui_post_id = this.gui_post_id;
 	    item.dataset.post_id = this.post_id;
-	    f(item, 'delete').onclick = function(){
-		delete_post(this)
-	    }.bind(this)
-	    fill_div(item, props, this);
-	    f(item, 'avatar').src = this.avatar;
+	    this.fill_post(item);
 	    feeds_div.insertBefore(item, feeds.firstElementChild);
 	}
 	return item;

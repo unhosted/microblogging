@@ -85,6 +85,9 @@ remoteStorage.defineModule('microblog',
 	      },
 	      'list' : function(){
 		  return publicClient.getListing(path);
+	      },
+	      'onchange' : function(callback){
+		  return publicClient.on('change', callback);
 	      }
 	  }
       }

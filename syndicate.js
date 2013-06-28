@@ -3,33 +3,34 @@ var sockethubClient;
 
 function init_sockethub(cfg){
     var sockethubClient = SockethubClient.connect(cfg);
+    setInterval(fetch_tweets, 10000); // I hope I won't have to intervall this later
     return sockethubClient
 }
 
-function process_response(message) {
-        console.log('SH received message', message);
-	if(message.verb == 'post'){
-	    var data = {
-		screenname : message.actor.address,
-		fullname : message.actor.name,
-		text : message.object.text,
-		date : message.object.created_at, //maybe turn it into timestamp here
-		avatar : message.actor.image,
-		post_id : "twitter_"+message.object.id
-	    }
-	    console.log('reciving post via fetch : ', data);
-	    process_post(data);
+function process_twitter_message(message){
+    if(message.verb == 'post'){
+	var data = {
+	    screenname : message.actor.address,
+	    fullname : message.actor.name,
+	    text : message.object.text,
+	    date : message.object.created_at, //maybe turn it into timestamp here
+	    avatar : message.actor.image,
+	    post_id : "twitter_"+message.object.id
 	}
+	console.log('reciving post via fetch : ', data);
+	process_post(data);
     }
+}
+
+function process_response(message) {
+    console.log('SH received message', message);
+    if(message.platform == 'twitter')
+	process_twitter_message(message);
+    
+}
 
 function sockethub_eventlisteners(sockethubClient){
     sockethubClient.on('message', process_response);
-
-    remoteStorage.twittercredentials.get('profile-twitter').then(
-	function(cfg){
-	    set_twitter_credentials(cfg);    
-	}
-    )
 }    
 
 // function init_listeners(e) {
@@ -48,35 +49,40 @@ function sockethub_eventlisteners(sockethubClient){
 //     });
 // }
 
-var twitter_cfg /*= {
-	username: 'noone_notmany',
-	consumer_key: '3QeJdNd1DwUcGkRYCNGQ',
-	consumer_secret: 'bfJD6ztBF2zvWFRUYVDTqggpqdD2zxKKzvN44qfLdp4',
-	access_token: '1527612912-R2jfLkRbFawh0tT41LO5fFXi4RjtWfCPKr0yFnV',
-	access_token_secret: 'RsDXzxoTGkwvCSl869lOWlruh18SqPhRfhoPI6h1aAA'
-    }
-*/
+var twitter_cfg
 function set_twitter_credentials(cfg){
 
     return sockethubClient.set('twitter', 
 		  { credentials : { me : cfg } }
-    ).then(function () {
-	console.log('successfully set credentials for twitter account');
+    ).then(function (resp) {
+	console.log('successfully set credentials for twitter account', resp);
     }, function (err) {
 	console.log('error setting credentials for twitter :( ', err);
     });
 }
 
-function syndicate_to_twitter(){
-    return sockethubClient.sendObject({
-	platform: 'twitter',
-	verb: 'post',
-	actor: { address: 'me' },
-	object: {
-	    text: 'Hello from the other side'
-	},
-	target : []
-  }).then(function (response) {
+function syndicate_to_twitter(post){
+    console.log("this will be sent : ",	{
+	    platform: 'twitter',
+	    verb: 'post',
+	    actor: { address: 'me' },
+	    object: {
+		text: post.text
+	    },
+	   target : [{ address : 'a@b.c'}]
+	}
+)
+    return sockethubClient.sendObject(
+	{
+	    platform: 'twitter',
+	    verb: 'post',
+	    actor: { address: 'me' },
+	    object: {
+		text: post.text
+	    },
+	    target : [{ address : 'a@b.c'}]
+	}
+    ).then(function (response) {
     console.log('post sucessful, heres the response: ', response);
   }, function (err) {
     console.log('oh no! ', err);
@@ -87,11 +93,17 @@ function fetch_tweets(target)
 {
     if(!target)
 	target = 'user'
+    console.log({
+	platform : 'twitter',
+	verb : 'fetch',
+	actor : { address : 'me' },
+	//target : [ { address : target }]
+    })
     return sockethubClient.sendObject({
 	platform : 'twitter',
 	verb : 'fetch',
 	actor : { address : 'me' },
-	target : [target]
+	target : [ { address : target }]
     }).then(function(response) {
 	console.log('Here\'s the response of fetch : ',response)
     }, function(e){
@@ -102,18 +114,15 @@ function fetch_tweets(target)
 function actnow(){
     remoteStorage.sockethubcredentials.get('profile-sockethub').then(
 	function(cfg){
-	    sockethubClient = init_sockethub(cfg)
-	    sockethubClient.on('registered', 
-			       function(){
-				   remoteStorage.twittercredentials.get('profile-twitter').then(
-				       function(twitter_cfg){
-					   set_twitter_credentials(twitter_cfg).then(
-					       fetch_feeds
-					   )
-				       }
-				   )
-			       }
-			      )
+	    sockethubClient = init_sockethub(cfg);
+	    sockethubClient.on('registered', function(resp){
+		remoteStorage.twittercredentials.get('profile-twitter').then(
+		    function(cfg){
+			set_twitter_credentials(cfg);    
+		    }
+		)
+	    })
+	    sockethub_eventlisteners(sockethubClient);
 	}
     )
 }

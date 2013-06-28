@@ -33,7 +33,6 @@ remoteStorage.defineModule('sockethubcredentials',
 		    return keys;
 		},
 		'store' : function(name, data){
-		    console.log(data);
 		    return privateClient.storeObject('sockethub', name, data);
 		    
 		},

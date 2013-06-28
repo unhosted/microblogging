@@ -39,7 +39,15 @@ function init(){
           get_profile(base_url+'/profile/me');
         }
     }
-    
+    f(profile_div,'edit').onclick = edit_profile_callback.bind(
+	{'screenname' : '',
+	 'name' : '',
+	 'description' : '',
+	 'location' : '',
+	 'homepage' : '',
+	 'profile_image_url' : ''}
+    );
+
 }
 
 
@@ -67,17 +75,12 @@ function get_profile(url){
 }
 
 function set_profile(profile){
-    console.log(profile);
-    var profile_keys = ['screenname','name','description','location'];
+    console.log("Setting Profile : ",profile);
+    const profile_keys = ['screenname','name','description','location'];
     fill_div(profile_div, profile_keys, profile);
     f(profile_div,'profile_img').src = profile.profile_image_url;
     f(profile_div, 'homepage').href = profile.homepage;
-    /*profile_keys.concat( [ 'homepage',
-      'profile_image_url',
-    ]).froEach(function(key){
-	profile_data[key] = profile[key];
-    })*/
-    f(profile_div,'edit').onclick = edit_profile_callback.bind(profile);
+    f(profile_div,'edit').onclick = edit_profile_callback().bind(profile);
 }
 
 
