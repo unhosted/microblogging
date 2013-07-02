@@ -3,10 +3,10 @@ var sockethubClient;
 
 function init_sockethub(cfg){
     var sockethubClient = SockethubClient.connect(cfg);
-    setInterval(fetch_tweets, 10000); // I hope I won't have to intervall this later
+//    setInterval(fetch_tweets, 10000); // I hope I won't have to intervall this later
     return sockethubClient
 }
-
+var update_timeout
 function process_twitter_message(message){
     if(message.verb == 'post'){
 	var data = {
@@ -19,6 +19,10 @@ function process_twitter_message(message){
 	}
 	console.log('reciving post via fetch : ', data);
 	process_post(data);
+	clearTimerout(update_timeout)
+	update_timeout = setTiemout(function(){
+	    remoteStorage.microblog.update()
+	}, 3000)
     }
 }
 
@@ -49,29 +53,22 @@ function sockethub_eventlisteners(sockethubClient){
 //     });
 // }
 
-var twitter_cfg
+
 function set_twitter_credentials(cfg){
 
     return sockethubClient.set('twitter', 
 		  { credentials : { me : cfg } }
     ).then(function (resp) {
+	//TODO error handling 
+	// the response might be false
 	console.log('successfully set credentials for twitter account', resp);
     }, function (err) {
-	console.log('error setting credentials for twitter :( ', err);
+	console.log('error sending credentials for twitter :( ', err);
     });
 }
 
 function syndicate_to_twitter(post){
-    console.log("this will be sent : ",	{
-	    platform: 'twitter',
-	    verb: 'post',
-	    actor: { address: 'me' },
-	    object: {
-		text: post.text
-	    },
-	   target : [{ address : 'a@b.c'}]
-	}
-)
+
     return sockethubClient.sendObject(
 	{
 	    platform: 'twitter',

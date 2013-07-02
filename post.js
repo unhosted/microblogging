@@ -16,10 +16,13 @@ var props = ['created_at',  'text', 'fullname', 'screenname']
     this.gui_post_id = gui_post_ids++
 
     this.fill_post = function(item, data){
-	if(!item)
-	    item = this.div();
-	if(!data)
-	    data = this;
+      if(!item)
+	item = this.div();
+      if(!data)
+	data = this;
+      if(typeof(data.avatr) === 'undefined'){
+        data.avatar = ''
+      }
 	f(item, 'delete').onclick = function(){
 	    delete_post(this)
 	}.bind(this)

@@ -16,13 +16,11 @@
 }
 .delete {
     float:right;
+    margin : 0.8em;
 }
 
 .deleted{
     opacity : 0.4;
-}
-.blogpost{
-    min-height : 5em;
 }
 
 #micropost {
@@ -48,11 +46,14 @@
     
 }
 
+
 .blogpost {
     background : grey;
+    min-height : 5em;
     border-radius : 2em;
     border : 3px lightgrey groove;
-    margin : 1em;
+    padding : 0.5em;
+    margin : 2em;
 }
 
 .blogpost .created_at{

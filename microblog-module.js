@@ -21,12 +21,6 @@ remoteStorage.defineModule('microblog',
 	      'avatar' : {
 		  type : 'string'
 	      }
-	      /*'retweet' : {
-		  'type' : 'Object',
-		  'properties' : {
-		      
-		  }
-	      },*/
 	  },
       });
       publicClient.declareType('micropost_list', {
@@ -48,7 +42,8 @@ remoteStorage.defineModule('microblog',
 	      }
 	  );
       }
-
+      var schemas = publicClient.schemas;
+      var keys = Object.keys(schemas[Object.keys(schemas)[0]].properties);
       function store_micropost(data){
 	  if(!data.date){
 	      data.date = (new Date).getTime()
@@ -56,14 +51,17 @@ remoteStorage.defineModule('microblog',
 	  if(!data.post_id)
 	      data.post_id = publicClient.uuid().replace(':','_');
 	  console.log('saving : ',data);
-
+	  var obj = {};
+	  keys.forEach(function(k){   //enshure only fields that are part of the schema are saved
+	      obj[k] = data[k];
+	  });
 	  return publicClient.storeObject('micropost',
-					  path+data.post_id, data)
+					  path+data.post_id, obj)
       }
 
       return {
 	  'exports' : {
-	      //pub: publicClient,
+	      pub: publicClient,
 	      'load' : function(name){
 		  console.log('loading ');
 		  

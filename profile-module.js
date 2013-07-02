@@ -28,8 +28,8 @@ remoteStorage.defineModule('profile',
 	  'exports' : {
 	      'keys' : function(){
 		  if(!keys){
-		      var shemas = publicClient.schemas;
-		      keys = Object.keys(shemas[Object.keys(shemas)[0]].properties);
+		      var schemas = publicClient.schemas;
+		      keys = Object.keys(schemas[Object.keys(schemas)[0]].properties);
 		  }
 		  return keys;
 	      },

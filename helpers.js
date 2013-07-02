@@ -50,18 +50,20 @@ function fill_div(div,props, data){
 }
 
 function get_url(url, callback){
-    function reqListener () {
-	if( this.status == 200 ){
-	    callback(JSON.parse(this.responseText));
-	}
-	else{
-	    console.error(this.statusCode,this);
-	}
-    };
-    var request = new XMLHttpRequest();
-    request.open("GET", url, true);
-    request.onload = reqListener;
-    request.setRequestHeader('Content-Type', 'aplication/json');
-    request.send();
+  function reqListener () {
+    if( this.status == 200 ){
+      callback(JSON.parse(this.responseText));
+    }
+    else{
+      console.error("HTTPRequest failed with : ",this.status,this);
+    }
+  };
+  var request = new XMLHttpRequest();
+  request.open("GET", url, true);
+  request.onload = reqListener;
+  request.setRequestHeader('Content-Type', 'aplication/json');
+  
+  request.send();
+  
 }
 

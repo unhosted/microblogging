@@ -18,11 +18,11 @@ function init_remotestorage(){
     remoteStorage.displayWidget();
     
     
-    if(document.location.search.indexOf("me=true") < 0){
+/*    if(document.location.search.indexOf("me=true") < 0){
 
 	window.location.replace('?me=true');
     }
-    
+  */  
 
     remoteStorage.microblog.onchange(function(resp){
 	console.log("RS processing onchang : ", resp)
@@ -138,14 +138,15 @@ function create_post(){
     
 	    post_it(data);
 
-	    remoteStorage.microblog.post(data).then(
-		function(){
-		    new_post(data);
+	    remoteStorage.microblog.post(data).then(undefined,
+		function(e){
+		    console.error("unable to store post ",data," because : ", e);
 		}
 	    )
 	    
 	
 	}).then( undefined, function(e){
+	    console.log("unable to fill  in your profile info : ", e)
 	    post_it(data);
 	}
     )
