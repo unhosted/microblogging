@@ -29,35 +29,187 @@ remoteStorage.defineModule('microblog',
 
       var path = "microposts/"
 
-      function update_microblogs_list(){
-	  return publicClient.getListing(path).then(
-	      function(posts){
-	
-		  var items = [];
-		  var len =  posts.length;
-		  for( var i = 0; i <= len; i++){
-		      items.push(publicClient.getItemURL(path+posts[i]));
-		  }
-		  publicClient.storeObject('micropost_list','microposts_list',items)
+    function posts_path(post){
+      date = new Date(post.date);
+      return path +
+        post.screenname + '/' +
+        date.getFullYaer + '/' +
+        date.getMonth() + '/' +
+        date.getDay() + '/';
+    }
+
+    function sort_pots(_posts, _path){
+      if(typeof(_path) === 'undefined')
+        _path = path;
+      posts = {};
+      try {
+        _posts.forEach( function(post_id){
+
+          pubclicClient.getOject(_path+post_id).then(function(obj) {
+            var target_path = post_path(obj)
+            if(posts[target_path] instanceof Array)
+              posts[target_path].push(obj)
+            else posts[target_path] = [obj]
+          })
+        })
+      } finally { 
+        Object.keys(posts).forEach( function(target_path) {
+          publicClient.getListing(target_path).then( function(listing){
+            
+            try {
+          
+              listing.forEach(function(item) {
+                publicClient.getObject(target_path+item).then( function(post){
+                  posts[target_path].forEach( function(obj) {
+                    if(post.text == obj.text )
+                        //&& post.fullname == obj.fullname && post.avatar == obj.avatar 
+                      throw(["same post found",post,obj])
+                  })
+                })
+              })
+                
+            } catch (e ) {
+              if( e instanceof Array 
+                  && e[0] == "same post found"  ) {
+                publicClient.deleteObject(target_path+e[1].post_id);
+                //ausming the incoming post is better somehow
+              }
+            } finally {
+              posts[target_path].forEach( function(obj) {
+                publicClient.storeObject(
+                  'micropost',
+	          post_path(obj)+obj.post_id, 
+                  obj ).then( function() {
+                    publicClient.deleteObject(_path+post_id)
+                  })
+                ;
+              })
+            }
+          })
+        })
+      }
+    }        
+    
+    function is_dir(path){
+      return item[item.length-1] == '/';
+    }
+
+    function find_newest(ammount, user_list){
+      function find_newest_for(ammount, user){
+        var list = [];
+        
+        function _newest(_path){
+          publicClient.getListing(_path).then( function(listing) {
+            var items = [];
+            var dirs = listing.sort().filter( function(item) {
+              if(!is_dir){
+                items.push( item );
+                return false
+              }
+              return true;
+            })
+            dirs.forEach( function(dir){
+              _newest( _path+dir );
+            });
+
+            if(items.length > 0){
+              publicClient.getAll(_path+item).then( function(posts) {
+                posts.sort(function(p1, p2){
+                  var d1 = p1.date;
+                  var d2 = p2.date;
+                  if(d1 > d2)
+                    return 1
+                  else if( d1 < d2 )
+                    return -1
+                  else
+                    return 0
+                })
+                list.push(
+                  posts.map(function(p){ 
+                    return _path+p.post_id
+                  })
+                )
+                if(list.length > ammount)
+                  throw("found enough posts")
+                
+              })    
+            }
+          })
+        }
+        try{ 
+          _newest(path+user)
+        } catch(e if e == "found enough posts"){
+          console.log(list);
+          return list.slice(0,ammount);
+        }
+      }
+      return find_newest_for(users[0]); //TODO only supporting one user for now
+      user_list.forEach(function(user){
+         
+      })
+    }
+
+    function update_microblogs_list( options ){
+      if(typeof(options) === 'undefined')
+        options = { newest : 10, senders : [], target : 'micropost_list'}
+      return publicClient.getListing(path).then(
+	function(items){
+	  var posts = [];
+	  var users = [];
+
+          var len =  items.length;
+          for(var i = 0; i < len; i++){
+            var item = items[i];
+            if(item[item.length-1] == '/'){
+              users.push(item);
+            }else{
+              posts.push(item);
+            }
+          }
+          delete len;
+          
+          sort_posts(posts);
+
+          var senders = options.senders
+          if(senders.length > 0){
+            users = users.filter(function(user){
+              return ( senders.indexOf( user.slice(0, user.length) ) < 0 )
+            })
+          }
+          delete senders;
+          
+          var newest = options.newest;
+          if(newest)
+            var list find_newest( options.newest, users );
+          delete newest;
+          
+          console.log(posts);
+          console.log(users);
+          //publicClient.storeObject(options.target,'microposts_list',list)
 	      }
 	  );
+    }
+    
+    var schemas = publicClient.schemas;
+    var keys = Object.keys(schemas[Object.keys(schemas)[0]].properties);
+    delete schemas;
+    
+    function store_micropost(data){
+      var obj = {};
+      keys.forEach(function(k){   //enshure only fields that are part of the schema are saved
+	obj[k] = data[k];
+      });
+      
+      if(!obj.date){
+	obj.date = (new Date).getTime()
       }
-      var schemas = publicClient.schemas;
-      var keys = Object.keys(schemas[Object.keys(schemas)[0]].properties);
-      function store_micropost(data){
-	  if(!data.date){
-	      data.date = (new Date).getTime()
-	  }
-	  if(!data.post_id)
-	      data.post_id = publicClient.uuid().replace(':','_');
-	  console.log('saving : ',data);
-	  var obj = {};
-	  keys.forEach(function(k){   //enshure only fields that are part of the schema are saved
-	      obj[k] = data[k];
-	  });
-	  return publicClient.storeObject('micropost',
-					  path+data.post_id, obj)
-      }
+      if(!obj.post_id)
+	obj.post_id = publicClient.uuid().replace(':','_');
+      console.log('saving : ', obj);
+      
+      return publicClient.storeObject('micropost',
+				      post_path(obj)+obj.post_id, obj)
+    }
 
       return {
 	  'exports' : {
