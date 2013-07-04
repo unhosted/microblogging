@@ -29,66 +29,78 @@ remoteStorage.defineModule('microblog',
 
       var path = "microposts/"
 
-    function posts_path(post){
+    function post_path(post){
       date = new Date(post.date);
       return path +
         post.screenname + '/' +
-        date.getFullYaer + '/' +
+        date.getFullYear() + '/' +
         date.getMonth() + '/' +
         date.getDay() + '/';
     }
-
-    function sort_pots(_posts, _path){
+    
+    function sort_posts(_posts, _path){
       if(typeof(_path) === 'undefined')
         _path = path;
       posts = {};
-      try {
-        _posts.forEach( function(post_id){
-
-          pubclicClient.getOject(_path+post_id).then(function(obj) {
-            var target_path = post_path(obj)
-            if(posts[target_path] instanceof Array)
-              posts[target_path].push(obj)
-            else posts[target_path] = [obj]
-          })
-        })
-      } finally { 
-        Object.keys(posts).forEach( function(target_path) {
-          publicClient.getListing(target_path).then( function(listing){
-            
-            try {
-          
+      console.log('sorting posts')
+      
+      _posts.forEach( function(post_id){
+        this.fullfiled = 1;
+        var len = _posts.length
+        publicClient.getObject(_path+post_id).then(function(obj) {
+          var target_path = post_path(obj)
+          console.log(target_path);
+          if(posts[target_path] instanceof Array)
+            posts[target_path].push(obj)
+          else posts[target_path] = [obj]
+        }).then(function(){
+          this.fullfiled += 1;
+          console.log(this.fullfiled)
+          if(this.fullfiled >= len)
+            sort_em();
+        }.bind(this))
+      })
+      function sort_em() {
+        //I realized this won't work can't user finally statements that way
+        console.log("posts after try",posts)
+        try {
+          Object.keys(posts).forEach( function(target_path) {
+            publicClient.getListing(target_path).then( function(listing){
               listing.forEach(function(item) {
                 publicClient.getObject(target_path+item).then( function(post){
                   posts[target_path].forEach( function(obj) {
                     if(post.text == obj.text )
-                        //&& post.fullname == obj.fullname && post.avatar == obj.avatar 
+                      //&& post.fullname == obj.fullname && post.avatar == obj.avatar 
                       throw(["same post found",post,obj])
                   })
                 })
               })
-                
-            } catch (e ) {
-              if( e instanceof Array 
-                  && e[0] == "same post found"  ) {
-                publicClient.deleteObject(target_path+e[1].post_id);
-                //ausming the incoming post is better somehow
-              }
-            } finally {
-              posts[target_path].forEach( function(obj) {
-                publicClient.storeObject(
-                  'micropost',
-	          post_path(obj)+obj.post_id, 
-                  obj ).then( function() {
-                    publicClient.deleteObject(_path+post_id)
-                  })
-                ;
-              })
-            }
+            })
           })
-        })
+                
+        } catch (e ) {
+          if( e instanceof Array 
+              && e[0] == "same post found"  ) {
+            publicClient.deleteObject(target_path+e[1].post_id);
+            //ausming the incoming post is better somehow
+          }
+        } finally {
+          console.log( "posts ", posts)
+          for(target_path in posts){
+            posts[target_path].forEach( function(obj) {
+              publicClient.storeObject(
+                'micropost',
+	        post_path(obj)+obj.post_id, 
+                obj ).then( function() {
+                  publicClient.remove(_path+obj.post_id)
+                })
+              ;
+            })
+          }
+        }
       }
-    }        
+    }
+
     
     function is_dir(path){
       return item[item.length-1] == '/';
@@ -138,12 +150,14 @@ remoteStorage.defineModule('microblog',
         }
         try{ 
           _newest(path+user)
-        } catch(e if e == "found enough posts"){
-          console.log(list);
-          return list.slice(0,ammount);
+        } catch( e ){
+          if( e === "found enough posts") {
+            console.log(list);
+            return list.slice(0,ammount);
+          }
         }
       }
-      return find_newest_for(users[0]); //TODO only supporting one user for now
+      return find_newest_for(10, user_list[0]); //TODO only supporting one user for now
       user_list.forEach(function(user){
          
       })
@@ -156,7 +170,7 @@ remoteStorage.defineModule('microblog',
 	function(items){
 	  var posts = [];
 	  var users = [];
-
+          var list
           var len =  items.length;
           for(var i = 0; i < len; i++){
             var item = items[i];
@@ -177,10 +191,10 @@ remoteStorage.defineModule('microblog',
             })
           }
           delete senders;
-          
+          var list
           var newest = options.newest;
           if(newest)
-            var list find_newest( options.newest, users );
+          //  list = find_newest( options.newest, users );
           delete newest;
           
           console.log(posts);
