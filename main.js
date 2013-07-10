@@ -1,5 +1,5 @@
 
-var feeds_div;
+var feed_div;
 var profile_div;
 
 var blogpost_template;
@@ -19,15 +19,15 @@ function init(){
 
     options = args_to_object(document.location.search);
 
-    feeds_div = document.getElementById('feeds');
+    feed_div = document.getElementById('feed');
     profile_div = document.getElementById('profile');
 
     gui_post_ids = 0;
     blogpost_template = document.getElementById('blogpost_template');
 
-    if(options.keys) {
-	registration_init(options)
-    }
+    // if(options.keys) {
+    //     registration_init(options)
+    // }
     
 
     if(options.me == 'true'){
@@ -89,7 +89,7 @@ function set_profile(profile){
     fill_div(profile_div, profile_keys, profile);
     f(profile_div,'profile_img').src = profile.profile_image_url;
     f(profile_div, 'homepage').href = profile.homepage;
-    f(profile_div,'edit').onclick = edit_profile_callback().bind(profile);
+    f(profile_div,'edit').onclick = edit_profile_callback.bind(profile);
 }
 
 

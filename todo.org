@@ -1,11 +1,17 @@
 * TODO
 ** DONE when loging in switching to the right base_url
 ** DONE get rid of profile_data as global
-** TODO make use of onchaange in profile
-** escapeing the posts in a way that tags inside the posts won't affect anything
+** DONE make use of onchaange in profile
+** DONE escapeing the posts in a way that tags inside the posts won't affect anything
 ** error handling
   where is this actualy neccesary
-
+*** TODO add and use error message field in the gui
+** TODO css
+** TODO just load a page of posts
+** TODO microblog.update()
+** TODO parameter for credentials
+** handle redirect on login stuff
+** TODO bug in sorting posts
 
 * profile module
 ** mustache

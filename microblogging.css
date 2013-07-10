@@ -2,36 +2,46 @@
     display : none;
 }
 
-#feeds {
+#feed {
     float: right;
     margin : 1em;
-    width : 65%;
+    width : 70%;
 }
 
-.edit_profile{
-    display : none;
+#profile {
+    display:inline;
+    float: left;
+    max-width : 30%;
+    width : 17em;
 }
-.remote{
-    display : none;
+#profile .label {
+    font-variant : small-caps;
+    font-style : italic
 }
-.delete {
-    float:right;
-    margin : 0.8em;
+#profile .value {
+    color : grey;
 }
-
-.deleted{
-    opacity : 0.4;
+.screenname{
+    font-size : 1.5em;
+    color : darkgreen;
 }
-
-#micropost {
-    display : none;
-    width : 80%;
+#profile .profile_img{
+    display:block;
+    width:80%;
     margin : auto;
 }
-#micropost > textarea {
-    width : 40em;
-    height : 4em;
+#profile p{
+    margin : 1em;
 }
+
+.edit_profile {
+    display : none;
+}
+.remote {
+    display : none;
+}
+
+
 #login {
     position : absolute;
     top : 1em;
@@ -42,49 +52,113 @@
     border : 1px orange solid;
     border-radius : 1em;
     padding : 0.2em;
-    background-color : silver;
-    
+    background-color : silver;   
 }
 
 
+#micropost {
+    display : none;
+    width : 80%;
+    margin : auto;
+}
+#micropost > textarea {
+    width : 40em;
+    height : 4em;
+}
+
 .blogpost {
-    background : grey;
+    background : lightgrey;
     min-height : 5em;
     border-radius : 2em;
     border : 3px lightgrey groove;
     padding : 0.5em;
     margin : 2em;
 }
-
-.blogpost .created_at{
+.blogpost span {
+    padding : 0.3em;
+}
+.blogpost .screenname {
+    font-size : 1.2em
+}
+.blogpost .created_at {
     float : right;
+    font-size : 0.6em
 }
 .blogpost .avatar {
+    float : left;
     height : 60px;
     width : 80px;
 }
-#profile {
-    display:inline;
-    float: left;
-    max-width : 30%;
-    width : 17em;
+.blogpost .text{
+    text-align : center;
 }
-.label {
-    font-variant : small-caps;
-    font-style : italic
+.blogpost .pannel {
+    float:right;
+    margin : 0.8em;
 }
-.value {
-    color : grey;
+
+.blogpost.syndicated .pannel .syndicate {
+    opacity : 0.3;
 }
-.screenname{
-    font-size : 1.5em;
-    color : darkgreen;
+
+.blogpost .pannel .delete .do{
+    display : block;
 }
-.profile_img{
-    display:block;
-    width:80%;
-    margin : auto;
+.blogpost.deleted .pannel .delete .do{
+    display : none;
 }
-#profile p{
-    margin : 1em;
+.blogpost .pannel .delete .redo{
+    display : none;
+}
+.blogpost.deleted .pannel .delete .redo{
+    display : block;
+}
+
+.deleted{
+    opacity : 0.4;
+}
+
+.button .icon {
+    height : 1.5em;
+    width : 1.5em;
+    float : left;
+}
+
+.icon {
+    height : 40px;
+    width : 40px;
+    float : left;
+}
+
+.widget {
+    float : left;
+    border : 2px green solid;
+}
+.widget.offline{
+    border : 1px grey dotted;
+}
+.widget.offline > img{
+    opacity : 0.5
+}
+.widget .expandable{
+   zoom : 80%;
+   /* width : 40em; */
+   display : none;
+}
+
+.widget .expandable p *{
+    display : table-cell;
+}
+.widget .expandable p{
+    display : table-row;
+}
+.widget .expandable input{
+    max-width:7em;
+}
+.widget .expandable span{
+    font-size : 0.6em;
+}
+
+.widget.expanded .expandable{
+    display : block
 }

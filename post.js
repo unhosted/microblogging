@@ -1,73 +1,88 @@
 
-
 function Post(data){
-    if(!data){
-	data = {};
+  if(!data){
+    data = {};
+  }
+  //this.data = data
+  //done in fill_post
+  this.gui_post_id = gui_post_ids++
+  this.post_id = data.post_id;
+
+
+  this.fill_post = function(item, data){
+    //console.log('fill_post', item, data)
+    if(!item)
+      item = this.div;
+    if(typeof(data.avatar) === 'undefined'){
+      data.avatar = ''
     }
-var props = ['created_at',  'text', 'fullname', 'screenname']
-    data.created_at = (new Date(data.date)).toString();
-    Object.keys(data).forEach(function(key){
-	var t;	
-	if( !( t = data[key] ) )
-	    t = '';
-	this[key] = t;
-    }.bind(this));
-
-    this.gui_post_id = gui_post_ids++
-
-    this.fill_post = function(item, data){
-      if(!item)
-	item = this.div();
-      if(!data)
-	data = this;
-      if(typeof(data.avatr) === 'undefined'){
-        data.avatar = ''
+    this.data = data;
+    
+    item.dataset.date = data.date;
+    //item.dataset.post_id = data.post_id;
+    //item.dataset.gui_post_id = this.gui_post_id;
+    //happens in display(need to run only once values should never change)
+    f(item,'screenname').textContent = data.screenname;
+    f(item,'fullname').textContent = data.fullname;
+    f(item,'text').textContent = data.text;
+    f(item,'created_at').textContent = (new Date(data.date)).toString();
+    f(item, 'avatar').src = data.avatar;
+    
+    f(item, 'delete').onclick = function(){
+      delete_post(data);
+    }
+    f(item, 'syndicate').onclick = function(){
+      console.log('onclick')
+      if(!data.twitter_id && sockethubClient){
+        syndicate_to_twitter(data);
       }
-	f(item, 'delete').onclick = function(){
-	    delete_post(this)
-	}.bind(this)
-	fill_div(item, props, data);
-	f(item, 'avatar').src = data.avatar;
+    }
 
+    if(data.twitter_id){
+      add_class(item, 'syndicated')
     }
     
-    this.div = function(){
-	var item = list_first(
-	    document.getElementsByClassName('blogpost'),
-	    function(item){
-		return (item.dataset['gui_post_id'] == this.gui_post_id);
-	    }.bind(this)
-	)
-	
-	if(!item) {
-	    console.log("creating new Post : ", this.gui_post_id)
-	    item = blogpost_template.cloneNode(true);
-	    item.id = "";
-	    item.dataset.gui_post_id = this.gui_post_id;
-	    item.dataset.post_id = this.post_id;
-	    this.fill_post(item);
-	    feeds_div.insertBefore(item, feeds.firstElementChild);
-	}
-	return item;
-    }
+  }
+    
+  
+  this.display = function(){
+    var item = this.div
+    if(!item) {
+      console.log("creating new Post : ", this.gui_post_id)
+      item = blogpost_template.cloneNode(true);
+      item.id = "";
+      item.dataset.gui_post_id = data.gui_post_id;
+      item.dataset.post_id = data.post_id;
+      this.fill_post(item, data);
 
-    this.to_atom = function(){
-	var feed = ""
-	feed += tag (  'entry',
-		       tag(  'author', 
-			     tag(  'name',this.fullname) + 
-			     tag(  'email', this.screenname )
-			  ) +
-		       tag(  'updated', this.created_at) +
-		       tag(  'summary', this.text )
-		    );
-	return feed;
-    }
+      var next_element = feed_div.firstElementChild;
+      forEach(feed_div.getElementsByClassName('blogpost'), function(older_post){
+        if(older_post.dataset.date > data.date)
+          next_element = older_post;
+      })
+      feed_div.insertBefore(item, next_element);
+      this.div = item;
+    }           
 
-    this.div();
+    return item;
+  }
 
+  this.to_atom = function(){
+    var feed = ""
+    feed += tag (  'entry',
+		   tag(  'author', 
+			 tag(  'name',this.fullname) + 
+			 tag(  'email', this.screenname )
+		      ) +
+		   tag(  'updated', this.created_at) +
+		   tag(  'summary', this.text )
+		);
+    return feed;
+  }
+    
+  this.display();
 }
 
 function new_post(data){
-    posts.push(new Post(data));
+  posts.push(new Post(data));
 }
