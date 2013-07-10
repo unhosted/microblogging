@@ -52,9 +52,13 @@ function process_response(message) {
 }
 
 function sockethub_eventlisteners(){
-  return sockethubClient.on( 'message', process_response); 
+  sockethubClient.on( 'message', process_response); 
   sockethubClient.on('unexpected-response', function(resp){
     console.log('UNEXPECTED-RESPONSE ', resp, arguments);
+  })
+  remoteStorage.profile.load().then(function(profile){
+    if(!profile)
+      sockethubClient.on('message', grab_profile)
   })
 }    
 
@@ -109,6 +113,22 @@ function fetch_tweets(target)
   }, function(e){
     console.log('oh noooo!', e)
   })
+}
+
+function grab_profile (message){
+  if(message.platform == 'twitter' && message.verb == 'post'){
+    remoteStorage.profile.load().then(function(profile){
+     if(!profile){
+       profile = {
+         screenname : message.actor.address,
+         name : message.actor.name,
+         profile_image_url : message.actor.image
+       }
+       console.log("grabed a profile from your tweets", profile)
+       remoteStorage.profile.save(profile);
+     }
+    })
+  }
 }
 
 function rs_init_syndication(){
