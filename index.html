@@ -54,62 +54,66 @@
     <div id="login" onclick="init_remotestorage();">
       login
     </div>
-    
-    <div id="sockethub-widget" class="widget remote offline">
-      <img class="icon" src="http://sockethub.org/favicon.ico" onclick="toggle(this.parentElement)">
-      <form class="expandable">
-        <p>
-          <span>host</span>  <input name="host"/>
-          <input type="checkbox" name="ssl"/> <span>ssl</span>
-        </p>
-        <p>
-          <span>port</span> <input name="port"/>
-          <span>secret</span> <input name="secret"/>
-        </p>
-        <p>
-          <button class="button" 
-                  onclick="event.preventDefault(); init_syndication(this.form);">
-            Connect
-          </button>
-          <button class="button" 
-                  onclick="event.preventDefault(); 
-                           console.log('pressed_save',this.form);
-                           store_sh_credentials( this.form );">
-            Save
-          </button>
-        </p>
-      </form>
-    </div>
+    <div id="pannel">
+      <div id="sockethub-widget" class="widget remote offline">
+        <img class="icon" src="http://sockethub.org/favicon.ico" onclick="toggle(this.parentElement)">
+        <form class="expandable">
+          <p>
+            <span>host</span>  <input name="host"/>
+            <input type="checkbox" name="ssl"/> <span>ssl</span>
+          </p>
+          <p>
+            <span>port</span> <input name="port"/>
+            <span>secret</span> <input name="secret"/>
+          </p>
+          <p>
+            <button class="button" 
+                    onclick="event.preventDefault(); init_syndication(this.form);">
+              Connect
+            </button>
+            <button class="button" 
+                    onclick="event.preventDefault(); 
+                             console.log('pressed_save',this.form);
+                             store_sh_credentials( this.form );">
+              Save
+            </button>
+          </p>
+        </form>
+      </div>
 
-    <div id="dove-widget" class="widget remote offline">
-      <img class="icon" 
-           src="http://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Peace_dove_icon.svg/120px-Peace_dove_icon.svg.png" 
-           onclick="toggle(this.parentElement)">
-      <form class="expandable">
-        <p>
-          <span>consumer key</span>  <input name="consumer_key"/>
-          <span>access token</span> <input  name="access_token"/> 
-        </p>
-        <p>
-          <span>consumer secret</span> <input name="consumer_secret"/>
-          <span>access token secret</span> <input name="access_token_secret"/>
-        </p>
-        <p>
-          <button class="button" onclick="event.preventDefault();
-                                          store_twitter_credentials(this.form);">
-            Save
-          </button>
-          <button class="button" onclick="event.preventDefault();
-                                          fetch_tweets('user')">Sync</button>
-        </p>
-      </form>
-    </div>
-    
-    <div id="feed">
+      <div id="dove-widget" class="widget remote offline">
+        <img class="icon" 
+             src="http://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Peace_dove_icon.svg/120px-Peace_dove_icon.svg.png" 
+             onclick="toggle(this.parentElement)">
+        <form class="expandable">
+          <p>
+            <span>consumer key</span>  <input name="consumer_key"/>
+            <span>access token</span> <input  name="access_token"/> 
+          </p>
+          <p>
+            <span>consumer secret</span> <input name="consumer_secret"/>
+            <span>access token secret</span> <input name="access_token_secret"/>
+          </p>
+          <p>
+            <button class="button" onclick="event.preventDefault();
+                                            store_twitter_credentials(this.form);">
+              Save
+            </button>
+            <button class="button" onclick="event.preventDefault();
+                                            fetch_tweets('user')">Sync</button>
+          </p>
+        </form>
+      </div>
+
       <form id="micropost" class="remote">
 	<textarea name='text'></textarea>
 	<button onclick="event.preventDefault(); create_post()"> POST</button>
       </form>
+
+    </div>
+    
+    <div id="feed">
+      
     </div>
     <form id="profile" name="profile">
       <img class="profile_img" src="//upload.wikimedia.org/wikipedia/commons/3/36/MRI_head_side.jpg"/>

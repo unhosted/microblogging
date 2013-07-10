@@ -83,6 +83,6 @@ function Post(data){
   this.display();
 }
 
-  function new_post(data){
-    posts.push(new Post(data));
-  }
+function new_post(data){
+  posts.push(new Post(data));
+}
