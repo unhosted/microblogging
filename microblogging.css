@@ -58,8 +58,8 @@
 
 #micropost {
     display : none;
-    width : 80%;
     margin : auto;
+    float : right;
 }
 #micropost > textarea {
     width : 40em;
@@ -133,6 +133,7 @@
 .widget {
     float : left;
     border : 2px green solid;
+    border-radius : 1em;
 }
 .widget.offline{
     border : 1px grey dotted;
@@ -140,15 +141,14 @@
 .widget.offline > img{
     opacity : 0.5
 }
-.widget .expandable{
-   zoom : 80%;
-   /* width : 40em; */
+.widget .expandable{   
    display : none;
 }
 
 .widget .expandable p *{
     display : table-cell;
 }
+
 .widget .expandable p{
     display : table-row;
 }
@@ -157,8 +157,10 @@
 }
 .widget .expandable span{
     font-size : 0.6em;
+    margin:auto;
 }
 
 .widget.expanded .expandable{
-    display : block
+    display : table;
+    
 }
