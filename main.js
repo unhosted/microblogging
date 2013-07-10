@@ -29,25 +29,38 @@ function init(){
     //     registration_init(options)
     // }
     
-
-    if(options.me == 'true'){
-        init_remotestorage();
-    } else {
-        var base_url = options.base_url;
-        if(base_url) {
-          aggregate(base_url+'/microblog/microposts_list');
-          get_profile(base_url+'/profile/me');
-        }
+  
+  if(options.me == 'true'){
+    init_remotestorage();
+  } else {
+    var base_url = options.base_url;
+    if(base_url) {
+      aggregate(base_url+'/microblog/microposts_list');
+      get_profile(base_url+'/profile/me');
     }
-    f(profile_div,'edit').onclick = edit_profile_callback.bind(
-	{'screenname' : '',
-	 'name' : '',
-	 'description' : '',
-	 'location' : '',
-	 'homepage' : '',
-	 'profile_image_url' : ''}
-    );
+  }
+  if(options.syndicate == 'true'){
+    remoteStorage.on('ready', rs_init_syndication);
+  }
+  var twitter_cfg
+  if( options.twitter )
+    if ( twitter_cfg = objectify_arguments(options.twitter))  {
+    store_twitter_credentials(twitter_cfg);
+  }
+  var sh_cfg
+  if(options.sockethub && ( sh_cfg = objectify_arguments(options.sockethub) )){
+    store_sh_credentials(sh_cfg);
+  }
 
+  f(profile_div,'edit').onclick = edit_profile_callback.bind(
+    {'screenname' : '',
+     'name' : '',
+     'description' : '',
+     'location' : '',
+     'homepage' : '',
+     'profile_image_url' : ''}
+  );
+  
 }
 
 

@@ -20,11 +20,10 @@ function init_remotestorage(){
     
   sockethub_widget = document.getElementById('sockethub-widget')
   dove_widget = document.getElementById('dove-widget')
-/*    if(document.location.search.indexOf("me=true") < 0){
-
-	window.location.replace('?me=true');
-    }
-  */  
+  
+  options.me = 'true';
+  push_state(options);
+   
 
   remoteStorage.microblog.onchange(function(resp){
     //console.log("RS processing onchang : ", resp)

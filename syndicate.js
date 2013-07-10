@@ -8,19 +8,23 @@ function init_sockethub(cfg){
   function register(){
     sc = SockethubClient.connect(cfg);
   }
+
   retryTimeout = setInterval(register, 10000);
   register();
+
   sc.on('registered', function(resp){
     console.log('socketHub registration done!')
     clearInterval(retryTimeout);
     
     remove_class(sockethub_widget,'offline');
+    remove_class(sockethub_widget, 'expanded');
     sockethubClient = sc;
   })
   sc.on('registration-failed', function(resp){
     console.error('socketHub registration failed', resp)
   })
-  
+  options.syndicate = 'true'
+  push_state(options);
   return sc;
 }
 var update_timeout
@@ -72,6 +76,9 @@ function set_twitter_credentials(cfg){
         throw(resp);
       console.log('successfully set credentials for twitter account', resp);
       remove_class(dove_widget, 'offline');
+      remove_class(dove_widget, 'expanded');
+      
+      f(dove_widget,'icon').onclick = fetch_tweets
     }).then(undefined, function (err) {
       console.log('error sending credentials for twitter :( ', err);
     } );
@@ -96,15 +103,15 @@ function syndicate_to_twitter(post){
   });
 }
 
-function fetch_tweets(target)
+function fetch_tweets(feed)
 {
-  if(!target)
-    target = 'user'
+  if(!(feed instanceof String) )
+    feed = 'user'
   var obj = {
     platform : 'twitter',
     verb : 'fetch',
     actor : { address : 'me' },
-    target : [ { address : target }],
+    target : [ { address : feed }],
     poll : true 
   }
   console.log(obj);

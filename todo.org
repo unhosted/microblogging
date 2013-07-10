@@ -7,10 +7,10 @@
   where is this actualy neccesary
 *** TODO add and use error message field in the gui
 ** TODO css
-** TODO just load a page of posts
+** just load a page of posts
 ** TODO microblog.update()
-** TODO parameter for credentials
-** handle redirect on login stuff
+** DONE parameter for credentials
+** DONE handle redirect on login stuff
 ** TODO bug in sorting posts
 
 * profile module
