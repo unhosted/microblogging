@@ -39,11 +39,13 @@ function args_to_object(str){
 function fill_div(div,props, data){
     props.forEach(
 	function(key){
-	    var t;
-	    if(!( t = data[key] ) ){
-		t = '';
-	    }
-	    f(div, key).innerHTML = t
+	  var t;
+	  if(!( t = data[key] ) ){
+	    t = '';
+	  }
+          var i = f(div, key)
+          if(i)
+            i.innerHTML = t;
 	}
     );
     return div
@@ -67,3 +69,19 @@ function get_url(url, callback){
   
 }
 
+function add_class(item, className){
+  return item.className = item.className.split(' ').concat([className]).join(' ');
+}
+function remove_class(item, className){
+  return item.className = item.className.split(' ').filter(function(t){
+    return t != className;
+  }).join(' ');
+}
+
+function toggle(e){
+  console.log('toggling',e)
+  if(e.className.indexOf('expanded') > 0)
+    remove_class(e,'expanded')
+  else
+    add_class(e, 'expanded');
+}

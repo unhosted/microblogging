@@ -1,4 +1,4 @@
-remoteStorage.defineModule('sockethubcredentials', 
+remoteStorage.defineModule('credentials-sockethub', 
     function(privateClient, publicClient){
 	privateClient.declareType('sockethub', {
 	    'type' : 'object',
@@ -22,19 +22,13 @@ remoteStorage.defineModule('sockethubcredentials',
 		}
 	    }
 	})
-	var keys = undefined;
 	return {
 	    'exports' : {
-		'keys' : function(){
-		    if(!keys){
-			var shemas = privateClient.schemas;
-			keys = Object.keys(shemas[Object.keys(shemas)[0]].properties);
-		    }
-		    return keys;
-		},
-		'store' : function(name, data){
-		    return privateClient.storeObject('sockethub', name, data);
-		    
+	      'store' : function(name, data){
+                console.log('storing sockethub credentials',name,data);
+		return privateClient.storeObject('sockethub', 
+                                                 name, 
+                                                 data);
 		},
 		'get' : function(name){
 		    return privateClient.getObject(name);
@@ -43,9 +37,9 @@ remoteStorage.defineModule('sockethubcredentials',
 	}
     });
 
-remoteStorage.defineModule('twittercredentials', 
+remoteStorage.defineModule('credentials-twitter', 
   function(privateClient, publicClient){
-      privateClient.declareType('sockethub', {
+      privateClient.declareType('twitter', {
 	  'type' : 'object',
 	  'properties' : {
 	      'username' : {
@@ -65,23 +59,15 @@ remoteStorage.defineModule('twittercredentials',
 	      }
 	  }
       })
-      var keys = undefined;
-      return {
-	  'exports' : {
-	      'keys' : function(){
-		  if(!keys){
-		      var shemas = publicClient.schemas;
-		      keys = Object.keys(shemas[Object.keys(shemas)[0]].properties);
-		  }
-		  return keys;
-	      },
-	      'store' : function(name, data){
-		  return privateClient.storeObject('sockethub', name, data);
-		  
-	      },
-	      'get' : function(name){
-		  return privateClient.getObject(name);
-	      }
-	  }
+    return {
+      'exports' : {
+
+	'store' : function(name, data){
+	  return privateClient.storeObject('twitter', name, data);
+	},
+	'get' : function(name){
+	  return privateClient.getObject(name);
+	}
       }
+    }
   });
