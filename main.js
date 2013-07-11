@@ -97,12 +97,15 @@ function get_profile(url){
 }
 
 function set_profile(profile){
-    console.log("Setting Profile : ",profile);
-    const profile_keys = ['screenname','name','description','location'];
-    fill_div(profile_div, profile_keys, profile);
-    f(profile_div,'profile_img').src = profile.profile_image_url;
-    f(profile_div, 'homepage').href = profile.homepage;
-    f(profile_div,'edit').onclick = edit_profile_callback.bind(profile);
+  console.log("Setting Profile : ",profile);
+  if(!profile.homepage){
+    profile.homepage = window.location.origin+window.location+path+"?base_url="+options.base_url
+  }
+  const profile_keys = ['screenname','name','description','location'];
+  fill_div(profile_div, profile_keys, profile);
+  f(profile_div,'profile_img').src = profile.profile_image_url;
+  f(profile_div, 'homepage').href = profile.homepage;
+  f(profile_div,'edit').onclick = edit_profile_callback.bind(profile);
 }
 
 

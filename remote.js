@@ -76,6 +76,7 @@ function rs_on_ready(){
   forEach(document.getElementsByClassName('remote'), function(el){
     el.style.display = 'block'
   })
+  options.base_url = remoteStorage.getStorageHref()
   remoteStorage['credentials-sockethub'].get('profile').then(
     function(cfg) {
       console.log(cfg)
