@@ -44,16 +44,59 @@ remoteStorage.defineModule('microblog', function(privateClient, publicClient){
       date.getDay() + '/';
   }
       
-  function is_dir(path){
+  function is_dir(item){
     return item[item.length-1] == '/';
   }
 
-  function get_newest(path, ammount){
-
+  function get_newest(_path, ammount, grassed){
+    //console.log('get_newest :',_path, ammount, grassed);
+    //alert('invoced')
+    function newest(_path, ammount, grassed){
+      if(typeof(grassed) === 'undefined'){
+        grassed = _path+':P';
+      }
+      return publicClient.getListing(_path).then(function(listing){
+        return listing.filter(function(t){
+        //  console.log(_path+t)
+          return ( is_dir(t) && (_path+t < grassed) )
+        }).sort()
+      }).then(function(pathes){
+        console.log('pathes',_path,pathes,'grassed',grassed);
+        if(pathes[pathes.length-1])
+          return newest(_path+pathes[pathes.length-1], ammount, grassed)
+        else
+          return publicClient.getAll(_path);
+      }).then(function(items){
+        var list = []
+        for(i in items){
+          list.push(items[i])
+        }
+        list = list.sort(function(a, b){
+          if(a.date > b.date)  return 1;
+          if(b.date > a.date) return -1;
+          else                 return 0;
+        })
+        if(list.length < ammount && list.length > 0) {
+          return newest(my_path, ammount - list.length, _path).then(
+            function(new_list){
+              console.log(list.concat(new_list));
+              return list.concat(new_list);
+            });
+        }
+        return list
+      }).then( function(e){ console.log(
+        'get_newest(',
+        _path,
+        ',',
+        ammount,
+        ') => ',
+        e); return e; } )
+    }
+    var my_path = _path;
+    return newest(_path, ammount, grassed)
   }
 
   function update_microblogs_list( options ){
-    return true
     if(typeof(options) === 'undefined')
       options = { newest : 10, senders : [], target : 'micropost_list'}
     return publicClient.getListing(path).then(
@@ -80,11 +123,17 @@ remoteStorage.defineModule('microblog', function(privateClient, publicClient){
 
         console.log(posts);
         console.log(users);
+        users = [users[0]];
         users.forEach(function(user){
-          get_newest(path+user, newest)
+          get_newest(path+user, options.newest).then(function(e){console.log('then ....',e); return e;}).then(function(list){
+            list = list.map(function(l){
+              return publicClient.getItemURL(post_path(l)+l.post_id);
+            })
+            publicClient.storeObject(options.target,'microposts_list',list)
+          })
         })
         
-        //publicClient.storeObject(options.target,'microposts_list',list)
+        
       }
     );
   }
@@ -120,8 +169,10 @@ remoteStorage.defineModule('microblog', function(privateClient, publicClient){
         if(post.text.trim() == obj.text.trim()){
           console.log('found dublicate post  : ', post, 'will be merged with', obj)
           keys.forEach(function(k){
-            if(!post[k])
-              post[k]  = obj[k]
+            if(!post[k]){
+              post[k]  = obj[k];
+              console.log('post:',post[k],'new one:',obj[k])
+            }
           })
           saved = true
           return publicClient.storeObject('micropost', _path+post_id, post)

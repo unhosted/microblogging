@@ -6,7 +6,7 @@
 ** error handling
   where is this actualy neccesary
 *** TODO add and use error message field in the gui
-** TODO css
+** css
 ** just load a page of posts
 ** TODO microblog.update()
 ** DONE parameter for credentials

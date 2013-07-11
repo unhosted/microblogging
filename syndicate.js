@@ -98,6 +98,7 @@ function syndicate_to_twitter(post){
     }
   ).then(function (response) {
     console.log('post sucessful, heres the response: ', response);
+    setTimeout(fetch_tweets,1000);
   }, function (err) {
     console.log('oh no! ', err);
   });
