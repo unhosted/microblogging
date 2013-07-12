@@ -141,6 +141,16 @@
 .widget.offline > img{
     opacity : 0.5
 }
+.widget.offline .connected {
+    display : none;
+}
+.widget.offline .disconnected {
+    display : block;
+}
+.widget .disconnected {
+    display : none;
+}
+
 .widget .expandable{   
    display : none;
 }

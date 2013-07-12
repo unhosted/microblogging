@@ -20,6 +20,11 @@ function init_sockethub(cfg){
     remove_class(sockethub_widget, 'expanded');
     sockethubClient = sc;
   })
+  sc.on('disconnected', function(resp){
+    console.log(resp);
+    add_class(sockethub_widget, 'offline');
+    add_class(dove_widget, 'offline');
+  })
   sc.on('registration-failed', function(resp){
     console.error('socketHub registration failed', resp)
   })
@@ -76,9 +81,8 @@ function set_twitter_credentials(cfg){
         throw(resp);
       console.log('successfully set credentials for twitter account', resp);
       remove_class(dove_widget, 'offline');
-      remove_class(dove_widget, 'expanded');
+      //remove_class(dove_widget, 'expanded');
       
-      f(dove_widget,'icon').onclick = fetch_tweets
     }).then(undefined, function (err) {
       console.log('error sending credentials for twitter :( ', err);
     } );

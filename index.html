@@ -67,9 +67,15 @@
             <span>secret</span> <input name="secret"/>
           </p>
           <p>
-            <button class="button" 
-                    onclick="event.preventDefault(); init_syndication(this.form);">
+            <button class="disconnected button" 
+                    onclick="event.preventDefault(); 
+                             init_syndication(this.form);">
               Connect
+            </button>
+            <button class="connected button"
+                    onclick="event.preventDefault();
+                             sockethubClient.disconnect()">
+              Disconnect
             </button>
             <button class="button" 
                     onclick="event.preventDefault(); 
@@ -85,6 +91,7 @@
         <img class="icon" 
              src="//upload.wikimedia.org/wikipedia/commons/thumb/7/70/Peace_dove_icon.svg/120px-Peace_dove_icon.svg.png" 
              onclick="toggle(this.parentElement)">
+        <!-- <img class="sync connected" src="sync.png"> -->
         <form class="expandable">
           <p>
             <span>consumer key</span>  <input name="consumer_key"/>
@@ -99,7 +106,7 @@
                                             store_twitter_credentials(this.form);">
               Save
             </button>
-            <button class="button" onclick="event.preventDefault();
+            <button class="button connected" onclick="event.preventDefault();
                                             fetch_tweets('user')">Sync</button>
           </p>
         </form>
