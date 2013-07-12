@@ -79,7 +79,7 @@ function remove_class(item, className){
 }
 
 function toggle(e){
-  console.log('toggling',e)
+//  console.log('toggling',e)
   if(e.className.indexOf('expanded') > 0)
     remove_class(e,'expanded')
   else

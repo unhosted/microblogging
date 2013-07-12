@@ -97,12 +97,8 @@ function get_profile(url){
 }
 
 function set_profile(profile){
-  console.log("Setting Profile : ",profile);
+  //console.log("Setting Profile : ",profile);
   if(!profile.homepage){
-    console.log("homepage empty", profile)
-    console.log(window.location.origin)
-    console.log(window.location.path)
-    console.log("?base_url="+options.base_url)
     profile.homepage = window.location.origin+window.location.pathname+"?base_url="+options.base_url
   }
   const profile_keys = ['screenname','name','description','location'];

@@ -60,7 +60,15 @@ function init_remotestorage(){
       set_profile(me);
     }
   })
-    
+
+  
+  remoteStorage['credentials-twitter'].onchange(function(resp){
+    console.log('twitter ', resp)
+    if(resp.newValue){
+      console.log('Dove Credentials Updated')
+      set_twitter_credentials(resp.newValue);
+    }
+  })
 }
 
 function rs_on_disconnect()	{
@@ -242,3 +250,4 @@ function store_twitter_credentials( form){
   var data = gui_twitter_cfg(form);
   remoteStorage['credentials-twitter'].store('profile', data)
 }
+

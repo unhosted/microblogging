@@ -6,10 +6,13 @@ function init_sockethub(cfg){
   var sc;
   console.log('registering at sockethub',cfg)
   function register(){
+    if(sc){
+      sc.disconnect();
+    }
     sc = SockethubClient.connect(cfg);
   }
 
-  retryTimeout = setInterval(register, 10000);
+  retryTimeout = setInterval(register, 3212);
   register();
 
   sc.on('registered', function(resp){
