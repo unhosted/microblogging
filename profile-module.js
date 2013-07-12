@@ -32,7 +32,7 @@ remoteStorage.defineModule('profile', function(privateClient, publicClient){
 	  function(old_data){
 	    if(old_data){
               keys.forEach( function(k){
-	        if(!data[k])
+	        if(typeof(data[k]) === 'undefined')
 	          data[k] = old_data[k]
 	      })
             }
