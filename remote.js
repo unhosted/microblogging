@@ -237,7 +237,7 @@ function store_sh_credentials(form){
   var data = gui_sh_cfg(form);
   remoteStorage['credentials-sockethub'].store('profile', data)
 }
-function store_twitter_credenitals( form){
+function store_twitter_credentials( form){
   var data = gui_twitter_cfg(form);
   remoteStorage['credentials-twitter'].store('profile', data)
 }
