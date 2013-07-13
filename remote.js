@@ -44,6 +44,7 @@ function init_remotestorage(){
 	//console.log("NEW POST");
 	new_post(resp.newValue);
       } else if(resp.oldValue && resp.newValue 
+                && resp.oldValue != resp.newValue
 		&& ( item  = post_by_id(resp.oldValue.post_id) )){
 	//console.log("UPDATE POST");
 	item.fill_post(undefined,resp.newValue)
@@ -54,10 +55,12 @@ function init_remotestorage(){
   remoteStorage.profile.onchange( function(resp) {
     console.log("profile.onchange : ", resp);
     if( resp.path.match(/\/profile\/me/) ){
-      console.log("UPDATEING PROFILE : ", resp);
-      var me = resp.newValue;
-      options.base_url = remoteStorage.getStorageHref()+'/public'
-      set_profile(me);
+      //console.log("UPDATEING PROFILE : ", resp);
+      if(resp.newValue != resp.oldValue){
+        var me = resp.newValue;
+        options.base_url = remoteStorage.getStorageHref()+'/public'
+        set_profile(me);
+      }
     }
   })
 
