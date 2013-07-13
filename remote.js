@@ -61,14 +61,6 @@ function init_remotestorage(){
     }
   })
 
-  
-  remoteStorage['credentials-twitter'].onchange(function(resp){
-    console.log('twitter ', resp)
-    if(resp.newValue){
-      console.log('Dove Credentials Updated')
-      set_twitter_credentials(resp.newValue);
-    }
-  })
 }
 
 function rs_on_disconnect()	{
@@ -248,6 +240,10 @@ function store_sh_credentials(form){
 }
 function store_twitter_credentials( form){
   var data = gui_twitter_cfg(form);
-  remoteStorage['credentials-twitter'].store('profile', data)
+  remoteStorage['credentials-twitter'].store('profile', data);
+  if(sockethubClient){
+    console.log("set_twitter_credential",data)
+    set_twitter_credentials(data);
+  }
 }
 
