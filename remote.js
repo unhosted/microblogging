@@ -1,22 +1,33 @@
 var rs_scope = 	{
-  'microblog':'rw',
   'profile':'rw',
   'credentials-twitter': 'rw',
-  'credentials-sockethub': 'rw'
+  'credentials-sockethub': 'rw',
+  //'credentials-facebook' : 'rw',
+  'microblog':'rw'
 }
 var sockethub_widget;
 var dove_widget;
 
 function init_remotestorage(){
 
-    document.all.login.style.display = 'none';
+  //remoteStorage = new RemoteStorage;
+  remoteStorage.displayWidget();
+  remoteStorage.claimAccess( rs_scope );
+  
+  remoteStorage.caching.reset();
+  remoteStorage.caching.enable('/public/profile/');
+  remoteStorage.caching.enable('/public/microblog/micropost/');
+  remoteStorage.caching.enable('/credentials-twitter/')
+  remoteStorage.caching.enable('/credentials-sockethub/')
+  //remoteStorage.caching.enable('/credentials-facebook/')  
+
+  document.all.login.style.display = 'none';
     
     remoteStorage.on('ready', rs_on_ready );
     
-    remoteStorage.on('disconnect', rs_on_disconnect);
+   remoteStorage.on('disconnect', rs_on_disconnect);
     
-    remoteStorage.claimAccess( rs_scope );
-    remoteStorage.displayWidget();
+    
     
   sockethub_widget = document.getElementById('sockethub-widget')
   dove_widget = document.getElementById('dove-widget')
@@ -26,7 +37,7 @@ function init_remotestorage(){
    
 
   remoteStorage.microblog.onchange(function(resp){
-    //console.log("RS processing onchang : ", resp)
+    console.log("RS processing onchang : ", resp)
     var item = undefined;
     
     if(resp.relativePath.match(/^microposts\//)){
@@ -58,12 +69,42 @@ function init_remotestorage(){
       //console.log("UPDATEING PROFILE : ", resp);
       if(resp.newValue != resp.oldValue){
         var me = resp.newValue;
-        options.base_url = remoteStorage.getStorageHref()+'/public'
+        options.base_url = remoteStorage.remote.href + '/public';
         set_profile(me);
       }
     }
   })
 
+  remoteStorage.onChange('/credentials-twitter/profile',function(resp){
+    var cfg = resp.newValue
+    if(cfg) {
+      var item = f(dove_widget,'expandable');
+      ['consumer_key','consumer_secret', 
+       'access_token', 'access_token_secret'].forEach(
+         function(key){
+           if(item[key])
+             item[key].value = cfg[key];
+         })
+      if(sockethubClient){
+        set_twitter_credentials(cfg);
+      }
+    }
+  })
+  remoteStorage.onChange('/credentials-sockethub/profile', function(resp) {
+    var cfg = resp.newValue;
+    if(cfg) {
+      var item = f(sockethub_widget,'expandable');
+      ['host','port'].forEach(
+        function(key){
+          if(item[key])
+            item[key].value = cfg[key];
+        })
+      item.secret.value = cfg.register.secret;
+      item.ssl.checked = cfg.ssl
+    }
+  
+  } )
+  
 }
 
 function rs_on_disconnect()	{
@@ -77,37 +118,13 @@ function rs_on_disconnect()	{
     );
 }
 function rs_on_ready(){	
+  //console.log('!!! on ready !!!')
+
   forEach(document.getElementsByClassName('remote'), function(el){
     el.style.display = 'block'
   })
   
-  remoteStorage['credentials-sockethub'].get('profile').then(
-    function(cfg) {
-      console.log(cfg)
-      if(cfg) {
-        var item = f(sockethub_widget,'expandable');
-        ['host','port'].forEach(
-          function(key){
-            if(item[key])
-              item[key].value = cfg[key];
-          })
-        item.secret.value = cfg.register.secret;
-        item.ssl.checked = cfg.ssl
-      }
-  })
-  remoteStorage['credentials-twitter'].get('profile').then(
-    function(cfg) {
-      console.log(cfg)
-      if(cfg) {
-        var item = f(dove_widget,'expandable');
-        ['consumer_key','consumer_secret', 
-         'access_token', 'access_token_secret'].forEach(
-           function(key){
-             if(item[key])
-               item[key].value = cfg[key];
-         })
-      }
-    })
+ 
 }
      
 function store_post(data){
@@ -124,8 +141,8 @@ function create_post(){
     
   function post_it(data){
     console.log(data);
-    if(sockethubClient)
-      syndicate_to_twitter(data)
+    if(sockethubClient && dove_it['yes'] )
+      syndicate_to_twitter(data);
     store_post(data);
   }
   

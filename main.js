@@ -6,6 +6,7 @@ var blogpost_template;
 
 var keys;
 var sockethubClient;
+var dove_it;
 
 var options;
 var url;
@@ -50,6 +51,12 @@ function init(){
   var sh_cfg
   if(options.sockethub && ( sh_cfg = objectify_arguments(options.sockethub) )){
     store_sh_credentials(sh_cfg);
+  }
+
+  if( !( options.me || options.syndicate 
+         || options.twitter || options.sockethub 
+         || options.base_url) ){
+    document.getElementById('help').style.display = 'block'
   }
 
   f(profile_div,'edit').onclick = edit_profile_callback.bind(

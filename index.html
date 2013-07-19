@@ -51,7 +51,9 @@
         </div>
       </div>
     </div>
-    <div id="login" onclick="init_remotestorage();">
+    <div id="login" onclick="document.getElementById('help')
+                             .style.display = 'none';
+                             init_remotestorage();">
       login
     </div>
     <div id="pannel">
@@ -115,12 +117,47 @@
       <form id="micropost" class="remote">
 	<textarea name='text'></textarea>
 	<button onclick="event.preventDefault(); create_post()"> POST</button>
+        <button id="dove_it" 
+                class="button dove disabled"
+                onclick="event.preventDefault();
+                         this.dataset['yes'] = this.classList.toggle('active');">
+          <img class="icon" src="http://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Peace_dove_icon.svg/120px-Peace_dove_icon.svg.png"/>
+        </button>
       </form>
 
     </div>
     
     <div id="feed">
-      
+      <div id="help">
+        <section>
+          <h3> Click Login Now </h3>
+        </section>
+        <section>
+          <h4> What is this? </h4>
+          <small>
+            <p> this is supposed to be a social-network like profile/microblog <p>
+            <p> You can Post stuff here and the app can take care of syndicating those to diffrent platforms </p>
+            <p> it also recives posts you made on those platforms and updates and saves them here </p>
+            <p> it can also produce a link containing a base_url to your remoteStorage, that makes your microblog and profile visible for people </p>
+          </small>
+         
+        </section>
+        <section>
+        <h4> GET OPTIONS : </h4>
+        <small>
+           after the url of the app, you can add those to trigger certain behaviour
+        </small>
+        
+        <p> base_url=https://host.domain/path/to/storage </p>
+        <p> me=true  :  logs in with remotestorage </p>
+        <p> syndicate=true  :  atempts to connect to sockethub und send credentials  </p>
+        <p> twitter={}  ||  twitter credentials, will get stored into your remoteStorage and used</p>
+        <p> socckethub={}  :  sockethub credentials, will get stored into your remoteStorage and used</p>
+        </section>
+        <br>
+        
+      </div>
+    
     </div>
     <form id="profile" name="profile">
       <img class="profile_img" src="//upload.wikimedia.org/wikipedia/commons/3/36/MRI_head_side.jpg"/>

@@ -19,6 +19,8 @@ function init_sockethub(cfg){
     console.log('socketHub registration done!')
     clearInterval(retryTimeout);
     
+    dove_it = document.getElementById('dove_it').dataset;
+    
     remove_class(sockethub_widget,'offline');
     remove_class(sockethub_widget, 'expanded');
     sockethubClient = sc;
@@ -84,7 +86,10 @@ function set_twitter_credentials(cfg){
         throw(resp);
       console.log('successfully set credentials for twitter account', resp);
       remove_class(dove_widget, 'offline');
-      //remove_class(dove_widget, 'expanded');
+      forEach(document.getElementsByClassName('dove'), function(el){
+        el.classList.remove('disabled');
+      })
+      
       
     }).then(undefined, function (err) {
       console.log('error sending credentials for twitter :( ', err);

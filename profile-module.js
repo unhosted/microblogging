@@ -1,4 +1,4 @@
-remoteStorage.defineModule('profile', function(privateClient, publicClient){
+RemoteStorage.defineModule('profile', function(privateClient, publicClient){
   publicClient.declareType('profile', {
     'type' : 'object',
     'properties' : {
@@ -22,7 +22,7 @@ remoteStorage.defineModule('profile', function(privateClient, publicClient){
       }
     },
   })
-  var keys =  Object.keys(publicClient.schemas[Object.keys(publicClient.schemas)[0]].properties);
+  var keys =  ['name', 'screenname', 'homepage', 'profile_image_url', 'location', 'description']//Object.keys(publicClient.schemas[Object.keys(publicClient.schemas)[0]].properties);
   return {
     'exports' : {
       'keys' : keys,  
@@ -45,7 +45,7 @@ remoteStorage.defineModule('profile', function(privateClient, publicClient){
       'load' : function(){
         return publicClient.getObject('me');
       },
-      'deploy' : function(){
+      /*'deploy' : function(){
         publicClient.getObject('me').then( function(me){
 	  var page = ""
 	  publicClient.getFile('template').then( function(template){
@@ -59,7 +59,7 @@ remoteStorage.defineModule('profile', function(privateClient, publicClient){
 				      page)
         })
       },
-      /*'link' : function(){
+      'link' : function(){
 	return publicClient.getItemURL('profile.html');
 	},*/
       'onchange' : function(callback){

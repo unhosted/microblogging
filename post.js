@@ -32,7 +32,7 @@ function Post(data){
       delete_post(data);
     }
     f(item, 'syndicate').onclick = function(){
-      console.log('onclick')
+      console.log('onclick : ',data.twitter_id)
       if(!data.twitter_id && sockethubClient){
         syndicate_to_twitter(data);
       }

@@ -1,5 +1,11 @@
-#templates {
+
+#templates,
+#help {
     display : none;
+}
+#help section p{
+    font-weight:bold;
+    font-family:monospace;
 }
 
 #feed {
@@ -122,6 +128,14 @@
     height : 1.5em;
     width : 1.5em;
     float : left;
+}
+
+.button.active {
+    border : 1px green solid;
+    border-radius:1em;
+}
+.button.disabled {
+    display : none;
 }
 
 .icon {
