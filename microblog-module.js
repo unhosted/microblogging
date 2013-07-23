@@ -173,7 +173,8 @@ RemoteStorage.defineModule('microblog', function(privateClient, publicClient){
       for(post_id in listing){
         var post = listing[post_id]; 
         
-        if(post.text.trim() == obj.text.trim()){
+        if(post.text.trim() == obj.text.trim() && 
+          (post.twitter_id && post.twitter_id == obj.twitter_id) || !post.twitter_id){
           console.log('found dublicate post  : ', post, 'will be merged with', obj)
           keys.forEach(function(k){
             if(!post[k]){
