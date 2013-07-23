@@ -11,14 +11,13 @@
 #feed {
     float: right;
     margin : 1em;
-    width : 70%;
+    max-width : 65%;
 }
 
 #profile {
     display:inline;
     float: left;
-    max-width : 30%;
-    width : 17em;
+    max-width : 25%;
 }
 #profile .label {
     font-variant : small-caps;
@@ -159,7 +158,7 @@
     display : none;
 }
 .widget.offline .disconnected {
-    display : block;
+    display : table-cell;
 }
 .widget .disconnected {
     display : none;
