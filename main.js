@@ -17,6 +17,8 @@ var posts = [];
 
 
 function init(){
+  remoteStorage.enableLog();
+
 
     options = args_to_object(document.location.search);
 

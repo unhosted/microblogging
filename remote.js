@@ -16,7 +16,7 @@ function init_remotestorage(){
   
   remoteStorage.caching.reset();
   remoteStorage.caching.enable('/public/profile/');
-  remoteStorage.caching.enable('/public/microblog/micropost/');
+  remoteStorage.caching.enable('/public/microblog/microposts/');
   remoteStorage.caching.enable('/credentials-twitter/')
   remoteStorage.caching.enable('/credentials-sockethub/')
   //remoteStorage.caching.enable('/credentials-facebook/')  
@@ -36,32 +36,31 @@ function init_remotestorage(){
   push_state(options);
    
 
-  remoteStorage.microblog.onchange(function(resp){
-    console.log("RS processing onchang : ", resp)
+  remoteStorage.onChange('/public/microblog/microposts/', function(resp){
+    console.log("RS processing onchang : ", resp);
     var item = undefined;
     
-    if(resp.relativePath.match(/^microposts\//)){
-      //console.log("micropost it is")
-      if((!resp.newValue && !resp.oldValue)){
-        console.log("weired things happen")
-        return;
-      }
-      if (typeof(resp.newValue) == 'undefined' 
-	  && ( item = post_by_id(resp.oldValue.post_id) ) ) {
-	//console.log("DELETE POST");
-	gui_delete_post(item);
-      } else if(typeof(resp.oldValue) == 'undefined' 
-	         && !post_by_id(resp.newValue.post_id)) {
-	//console.log("NEW POST");
-	new_post(resp.newValue);
-      } else if(resp.oldValue && resp.newValue 
-                && resp.oldValue != resp.newValue
-		&& ( item  = post_by_id(resp.oldValue.post_id) )){
-	//console.log("UPDATE POST");
-	item.fill_post(undefined,resp.newValue)
-      }
+    if( !resp.newValue && !resp.oldValue ){
+      console.log("weired things happen")
+      return;
+    }
+    
+    if (typeof(resp.newValue) == 'undefined' 
+	&& ( item = post_by_id(resp.oldValue.post_id) ) ) {
+      console.log("DELETE POST");
+      gui_delete_post(item);
+    } else if(typeof(resp.oldValue) == 'undefined' 
+	      && !post_by_id(resp.newValue.post_id)) {
+      console.log("NEW POST");
+      new_post(resp.newValue);
+    } else if(resp.oldValue && resp.newValue 
+              && resp.oldValue != resp.newValue
+	      && ( item  = post_by_id(resp.oldValue.post_id) )){
+      console.log("UPDATE POST");
+      item.fill_post(undefined,resp.newValue)
     }
   })
+
     
   remoteStorage.profile.onchange( function(resp) {
     console.log("profile.onchange : ", resp);
