@@ -1,4 +1,4 @@
-remoteStorage.defineModule('profile', function(privateClient, publicClient){
+RemoteStorage.defineModule('profile', function(privateClient, publicClient){
   publicClient.declareType('profile', {
     'type' : 'object',
     'properties' : {

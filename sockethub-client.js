@@ -996,7 +996,7 @@ define('sockethub/remoteStorage',[], function() {
   };
 
   function connectRemoteStorage(remoteStorage) {
-    remoteStorage.defineModule('sockethub', module);
+    RemoteStorage.defineModule('sockethub', module);
     remoteStorage.access.claim('sockethub', 'rw');
 
     var token = remoteStorage.getBearerToken();
