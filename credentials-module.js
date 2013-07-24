@@ -1,6 +1,6 @@
 
 
-remoteStorage.defineModule('credentials-sockethub', function(privateClient, publicClient){
+RemoteStorage.defineModule('credentials-sockethub', function(privateClient, publicClient){
   privateClient.declareType('sockethub', {
     'type' : 'object',
     'properties' : {
@@ -41,7 +41,7 @@ remoteStorage.defineModule('credentials-sockethub', function(privateClient, publ
   }
 });
 
-remoteStorage.defineModule('credentials-twitter', function(privateClient, publicClient){
+RemoteStorage.defineModule('credentials-twitter', function(privateClient, publicClient){
   privateClient.declareType('twitter', {
     'type' : 'object',
     'properties' : {
