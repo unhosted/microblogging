@@ -9,7 +9,7 @@ var dove_widget;
 
 function init_remotestorage(){
 
-    document.all.login.style.display = 'none';
+    document.login.style.display = 'none';
     
     remoteStorage.on('ready', rs_on_ready );
     
