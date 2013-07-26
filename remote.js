@@ -63,16 +63,16 @@ function init_remotestorage(){
   })
 
   
-  remoteStorage.profile.onchange( function(resp) {
+  remoteStorage.onChange('/profile/me', function(resp) {
     console.log("profile.onchange : ", resp);
-    if( resp.path.match(/\/profile\/me/) ){
-      //console.log("UPDATEING PROFILE : ", resp);
-      if(resp.newValue != resp.oldValue){
-        var me = resp.newValue;
-        options.base_url = remoteStorage.remote.href + '/public';
-        set_profile(me);
-      }
+    
+    //console.log("UPDATEING PROFILE : ", resp);
+    if(resp.newValue != resp.oldValue){
+      var me = resp.newValue;
+      options.base_url = remoteStorage.remote.href + '/public';
+      set_profile(me);
     }
+    
   })
 
   remoteStorage.onChange('/credentials-twitter/profile',function(resp){
@@ -119,8 +119,11 @@ function rs_on_disconnect()	{
 }
 function rs_on_ready(){	
   //console.log('!!! on ready !!!')
+  options.base_url = remoteStorage.remote.href + '/public';
   remoteStorage.credentialsTwitter.get('profile').then(gui_set_twitter);
   remoteStorage.credentialsSockethub.get('profile').then(gui_set_sh);
+  remoteStorage.profile.load().then(set_profile)
+  
   forEach(document.getElementsByClassName('remote'), function(el){
     el.style.display = 'block'
   })
