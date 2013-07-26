@@ -2,6 +2,8 @@
 var sockethubClient;
 var retryTimeout;
 function init_sockethub(cfg){
+  if(!cfg)
+    return;
   clearInterval(retryTimeout);
   var sc;
   console.log('registering at sockethub',cfg)
@@ -12,7 +14,7 @@ function init_sockethub(cfg){
     sc = SockethubClient.connect(cfg);
   }
 
-  retryTimeout = setInterval(register, 3212);
+  retryTimeout = setInterval(register, 32127);
   register();
 
   sc.on('registered', function(resp){
@@ -155,6 +157,8 @@ function rs_init_syndication(){
   return remoteStorage['credentials-sockethub'].get('profile').then(
     function(cfg){
       var sc = init_sockethub(cfg);
+      if(!sc)
+        return;
       sc.on('registered', function(){
         sockethub_eventlisteners();
         remoteStorage['credentials-twitter'].get('profile').then(
@@ -167,6 +171,8 @@ function rs_init_syndication(){
 
 function init_syndication(form){
   sc = init_sockethub(gui_sh_cfg(form));
+  if(!sc)
+    return;
   sc.on('registered', function(){
     sockethub_eventlisteners();
     set_twitter_credentials(gui_twitter_cfg())

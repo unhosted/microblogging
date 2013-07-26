@@ -1,4 +1,11 @@
-
+body {
+    margin:0px;
+}
+#pannel {
+    height : 6em;
+    background-color : darkgrey;
+    width:100%;
+}
 #templates,
 #help {
     display : none;
@@ -65,11 +72,22 @@
     display : none;
     margin : auto;
     float : right;
+    width : 38em;
 }
-#micropost > textarea {
+#micropost div > * {
+    display:inline;
+}
+#micropost .rs{
+    height : 3.6em;
+}
+#micropost textarea {
     width : 40em;
     height : 4em;
 }
+#micropost .sh{
+    margin-left:32em;
+}
+
 
 .blogpost {
     background : lightgrey;
@@ -126,6 +144,7 @@
 .button .icon {
     height : 1.5em;
     width : 1.5em;
+    margin : 0px;
     float : left;
 }
 
@@ -136,6 +155,9 @@
 .button.disabled {
     display : none;
 }
+.button {
+    padding : 0px;
+}
 
 .icon {
     height : 40px;
@@ -144,7 +166,7 @@
 }
 
 .widget {
-    float : left;
+    float:left;
     border : 2px green solid;
     border-radius : 1em;
 }

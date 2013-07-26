@@ -49,8 +49,8 @@ function init_remotestorage(){
 	&& ( item = post_by_id(resp.oldValue.post_id) ) ) {
       console.log("DELETE POST");
       gui_delete_post(item);
-    } else if(typeof(resp.oldValue) == 'undefined' 
-	      && !post_by_id(resp.newValue.post_id)) {
+    } else if(!post_by_id(resp.newValue.post_id)
+              ){//&& typeof(resp.oldValue) == 'undefined' ) {
       console.log("NEW POST");
       new_post(resp.newValue);
     } else if(resp.oldValue && resp.newValue 
@@ -61,7 +61,7 @@ function init_remotestorage(){
     }
   })
 
-    
+  
   remoteStorage.profile.onchange( function(resp) {
     console.log("profile.onchange : ", resp);
     if( resp.path.match(/\/profile\/me/) ){
@@ -77,6 +77,7 @@ function init_remotestorage(){
   remoteStorage.onChange('/credentials-twitter/profile',function(resp){
     var cfg = resp.newValue
     if(cfg) {
+      console.log('setting twitter in gui')
       var item = f(dove_widget,'expandable');
       ['consumer_key','consumer_secret', 
        'access_token', 'access_token_secret'].forEach(
@@ -101,7 +102,6 @@ function init_remotestorage(){
       item.secret.value = cfg.register.secret;
       item.ssl.checked = cfg.ssl
     }
-  
   } )
   
 }
@@ -118,12 +118,9 @@ function rs_on_disconnect()	{
 }
 function rs_on_ready(){	
   //console.log('!!! on ready !!!')
-
   forEach(document.getElementsByClassName('remote'), function(el){
     el.style.display = 'block'
   })
-  
- 
 }
      
 function store_post(data){
