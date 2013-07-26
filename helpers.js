@@ -27,13 +27,13 @@ function f(element, className){
 
 
 function args_to_object(str){
-    return str.slice(1).split('&').reduce( 
-	function(m, el){ 
-	    var set = el.split('=');
-	    m[decodeURIComponent(set[0])]=decodeURIComponent(set[1]); 
-	    return m  
-	}, {});
-
+  return str.slice(1).split('&').reduce( 
+    function(m, el){ 
+      var set = el.split('=');
+      if(set[0])
+        m[decodeURIComponent(set[0])]=decodeURIComponent(set[1]); 
+      return m  
+    }, {});
 }
 
 function fill_div(div,props, data){
@@ -79,9 +79,32 @@ function remove_class(item, className){
 }
 
 function toggle(e){
-  console.log('toggling',e)
+//  console.log('toggling',e)
   if(e.className.indexOf('expanded') > 0)
     remove_class(e,'expanded')
   else
     add_class(e, 'expanded');
+}
+
+function objectify_arguments(obj){
+  if(obj.substr(-1) == '/') {
+    obj = obj.substr(0, options.keys.length - 1);
+  }
+  try {
+    var ret = JSON.parse(options.keys);
+    console.log('parse success', ret);
+    return ret;
+  } catch(e) {
+    console.log('parse failure', obj);
+    return undefined;
+  }
+}
+
+function push_state(options){
+  var url = window.location.pathname + '?'
+  for(var t in options){
+    url += t + '=' + options[t] + '&'
+  }
+  url = url.substr(0,url.length-1)
+  history.pushState({},'remote',url);
 }

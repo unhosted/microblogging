@@ -2,25 +2,41 @@
 var sockethubClient;
 var retryTimeout;
 function init_sockethub(cfg){
+  if(!cfg)
+    return;
   clearInterval(retryTimeout);
   var sc;
   console.log('registering at sockethub',cfg)
   function register(){
+    if(sc){
+      sc.disconnect();
+    }
     sc = SockethubClient.connect(cfg);
   }
-  retryTimeout = setInterval(register, 10000);
+
+  retryTimeout = setInterval(register, 32127);
   register();
+
   sc.on('registered', function(resp){
     console.log('socketHub registration done!')
     clearInterval(retryTimeout);
     
+    dove_it = document.getElementById('dove_it').dataset;
+    
     remove_class(sockethub_widget,'offline');
+    remove_class(sockethub_widget, 'expanded');
     sockethubClient = sc;
+  })
+  sc.on('disconnected', function(resp){
+    console.log(resp);
+    add_class(sockethub_widget, 'offline');
+    add_class(dove_widget, 'offline');
   })
   sc.on('registration-failed', function(resp){
     console.error('socketHub registration failed', resp)
   })
-  
+  options.syndicate = 'true'
+  push_state(options);
   return sc;
 }
 var update_timeout
@@ -72,6 +88,11 @@ function set_twitter_credentials(cfg){
         throw(resp);
       console.log('successfully set credentials for twitter account', resp);
       remove_class(dove_widget, 'offline');
+      forEach(document.getElementsByClassName('dove'), function(el){
+        el.classList.remove('disabled');
+      })
+      
+      
     }).then(undefined, function (err) {
       console.log('error sending credentials for twitter :( ', err);
     } );
@@ -91,20 +112,21 @@ function syndicate_to_twitter(post){
     }
   ).then(function (response) {
     console.log('post sucessful, heres the response: ', response);
+    setTimeout(fetch_tweets,1000);
   }, function (err) {
     console.log('oh no! ', err);
   });
 }
 
-function fetch_tweets(target)
+function fetch_tweets(feed)
 {
-  if(!target)
-    target = 'user'
+  if(!(feed instanceof String) )
+    feed = 'user'
   var obj = {
     platform : 'twitter',
     verb : 'fetch',
     actor : { address : 'me' },
-    target : [ { address : target }],
+    target : [ { address : feed }],
     poll : true 
   }
   console.log(obj);
@@ -135,6 +157,8 @@ function rs_init_syndication(){
   return remoteStorage['credentials-sockethub'].get('profile').then(
     function(cfg){
       var sc = init_sockethub(cfg);
+      if(!sc)
+        return;
       sc.on('registered', function(){
         sockethub_eventlisteners();
         remoteStorage['credentials-twitter'].get('profile').then(
@@ -147,6 +171,8 @@ function rs_init_syndication(){
 
 function init_syndication(form){
   sc = init_sockethub(gui_sh_cfg(form));
+  if(!sc)
+    return;
   sc.on('registered', function(){
     sockethub_eventlisteners();
     set_twitter_credentials(gui_twitter_cfg())

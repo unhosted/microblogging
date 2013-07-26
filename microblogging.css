@@ -1,18 +1,30 @@
-#templates {
+body {
+    margin:0px;
+}
+#pannel {
+    height : 6em;
+    background-color : darkgrey;
+    width:100%;
+}
+#templates,
+#help {
     display : none;
+}
+#help section p{
+    font-weight:bold;
+    font-family:monospace;
 }
 
 #feed {
     float: right;
     margin : 1em;
-    width : 70%;
+    max-width : 65%;
 }
 
 #profile {
     display:inline;
     float: left;
-    max-width : 30%;
-    width : 17em;
+    max-width : 25%;
 }
 #profile .label {
     font-variant : small-caps;
@@ -58,13 +70,24 @@
 
 #micropost {
     display : none;
-    width : 80%;
     margin : auto;
+    float : right;
+    width : 38em;
 }
-#micropost > textarea {
+#micropost div > * {
+    display:inline;
+}
+#micropost .rs{
+    height : 3.6em;
+}
+#micropost textarea {
     width : 40em;
     height : 4em;
 }
+#micropost .sh{
+    margin-left:32em;
+}
+
 
 .blogpost {
     background : lightgrey;
@@ -121,7 +144,19 @@
 .button .icon {
     height : 1.5em;
     width : 1.5em;
+    margin : 0px;
     float : left;
+}
+
+.button.active {
+    border : 1px green solid;
+    border-radius:1em;
+}
+.button.disabled {
+    display : none;
+}
+.button {
+    padding : 0px;
 }
 
 .icon {
@@ -131,8 +166,9 @@
 }
 
 .widget {
-    float : left;
+    float:left;
     border : 2px green solid;
+    border-radius : 1em;
 }
 .widget.offline{
     border : 1px grey dotted;
@@ -140,15 +176,24 @@
 .widget.offline > img{
     opacity : 0.5
 }
-.widget .expandable{
-   zoom : 80%;
-   /* width : 40em; */
+.widget.offline .connected {
+    display : none;
+}
+.widget.offline .disconnected {
+    display : table-cell;
+}
+.widget .disconnected {
+    display : none;
+}
+
+.widget .expandable{   
    display : none;
 }
 
 .widget .expandable p *{
     display : table-cell;
 }
+
 .widget .expandable p{
     display : table-row;
 }
@@ -157,8 +202,10 @@
 }
 .widget .expandable span{
     font-size : 0.6em;
+    margin:auto;
 }
 
 .widget.expanded .expandable{
-    display : block
+    display : table;
+    
 }
