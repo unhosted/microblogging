@@ -10,6 +10,7 @@ var dove_widget;
 
 function init_remotestorage(){
 
+
   //remoteStorage = new RemoteStorage;
   remoteStorage.displayWidget();
   remoteStorage.claimAccess( rs_scope );
