@@ -21,11 +21,11 @@ function init_remotestorage(){
   remoteStorage.caching.enable('/credentials-sockethub/')
   //remoteStorage.caching.enable('/credentials-facebook/')  
 
-  document.all.login.style.display = 'none';
+  document.getElementById('login').style.display = 'none';
     
-    remoteStorage.on('ready', rs_on_ready );
+  remoteStorage.on('ready', rs_on_ready );
     
-   remoteStorage.on('disconnect', rs_on_disconnect);
+  remoteStorage.on('disconnect', rs_on_disconnect);
     
     
     
@@ -118,6 +118,8 @@ function rs_on_disconnect()	{
 }
 function rs_on_ready(){	
   //console.log('!!! on ready !!!')
+  remoteStorage.credentialsTwitter.get('profile').then(gui_set_twitter);
+  remoteStorage.credentialsSockethub.get('profile').then(gui_set_sh);
   forEach(document.getElementsByClassName('remote'), function(el){
     el.style.display = 'block'
   })
@@ -239,7 +241,16 @@ function gui_sh_cfg(form){
            }
          }
 }
-
+function gui_set_sh(cfg){
+  if(!cfg)
+    return;
+  var form = f(sockethub_widget, 'expandable') 
+  form.host.value = cfg.host;
+  form.port.value = cfg.port;
+  form.ssl.checked = cfg.ssl;
+  form.secret.value = cfg.register.secret;
+  return cfg;
+}
 function gui_twitter_cfg(form){
   if(typeof(form) === 'undefined')
     form = f(dove_widget,'expandable');
@@ -250,6 +261,17 @@ function gui_twitter_cfg(form){
     access_token_secret : form.access_token_secret.value
   }
 }
+function gui_set_twitter(cfg){
+  if(!cfg)
+    return;
+  var form = f(dove_widget, 'expandable')
+  form.consumer_key.value = cfg.consumer_key;
+  form.consumer_secret.value = cfg.consumer_secret; 
+  form.access_token.value = cfg.access_token;
+  form.access_token_secret.value = cfg.access_token_secret;
+  return cfg;
+}
+
 function store_sh_credentials(form){
   var data = gui_sh_cfg(form);
   remoteStorage['credentials-sockethub'].store('profile', data)
