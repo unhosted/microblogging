@@ -113,6 +113,7 @@ function set_profile(profile){
   f(profile_div,'profile_img').src = profile.profile_image_url;
   f(profile_div, 'homepage').href = profile.homepage;
   f(profile_div,'edit').onclick = edit_profile_callback.bind(profile);
+  return profile;
 }
 
 
