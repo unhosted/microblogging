@@ -1,18 +1,31 @@
-#templates {
+body {
+    margin:0px;
+}
+#pannel {
+    height : 6em;
+    background-color : darkgrey;
+    width:100%;
+}
+#templates,
+#help {
     display : none;
+}
+#help section p{
+    font-weight:bold;
+    font-family:monospace;
 }
 
 #feed {
     float: right;
     margin : 1em;
-    width : 70%;
+    width : 65%;
 }
 
 #profile {
+    margin-top : 10px;
     display:inline;
     float: left;
-    max-width : 30%;
-    width : 17em;
+    max-width : 25%;
 }
 #profile .label {
     font-variant : small-caps;
@@ -60,11 +73,22 @@
     display : none;
     margin : auto;
     float : right;
+    width : 38em;
 }
-#micropost > textarea {
+#micropost .rs > * {
+    display:inline;
+}
+#micropost .rs{
+    height : 3.6em;
+}
+#micropost textarea {
     width : 40em;
     height : 4em;
 }
+#micropost .sh{
+    margin-left:32em;
+}
+
 
 .blogpost {
     background : lightgrey;
@@ -91,6 +115,8 @@
 }
 .blogpost .text{
     text-align : center;
+    white-space : pre-wrap;
+    word-wrap : break-word;
 }
 .blogpost .pannel {
     float:right;
@@ -121,7 +147,16 @@
 .button .icon {
     height : 1.5em;
     width : 1.5em;
+    margin : 0px;
     float : left;
+}
+
+.button.active {
+    border : 1px green solid;
+    border-radius:1em;
+}
+.button {
+    padding : 0px;
 }
 
 .icon {
@@ -131,7 +166,7 @@
 }
 
 .widget {
-    float : left;
+    float:left;
     border : 2px green solid;
     border-radius : 1em;
 }
@@ -145,7 +180,7 @@
     display : none;
 }
 .widget.offline .disconnected {
-    display : block;
+    display : inline;
 }
 .widget .disconnected {
     display : none;
@@ -155,22 +190,23 @@
    display : none;
 }
 
-.widget .expandable p *{
-    display : table-cell;
-}
-
-.widget .expandable p{
-    display : table-row;
-}
 .widget .expandable input{
-    max-width:7em;
+    width:8em;
+    font-size : 0.5em;
 }
-.widget .expandable span{
+.widget .expandable label{
     font-size : 0.6em;
-    margin:auto;
+    
 }
 
 .widget.expanded .expandable{
-    display : table;
-    
+    display : block;    
+    width : 17em;
+}
+.widget p {
+    margin : 0px;
+}
+
+.disabled {
+    display : none;
 }

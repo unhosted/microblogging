@@ -25,14 +25,14 @@ function Post(data){
     f(item,'screenname').textContent = data.screenname;
     f(item,'fullname').textContent = data.fullname;
     f(item,'text').textContent = data.text;
-    f(item,'created_at').textContent = (new Date(data.date)).toString();
+    f(item,'created_at').textContent = (new Date(data.date)).toLocaleDateString();
     f(item, 'avatar').src = data.avatar;
     
     f(item, 'delete').onclick = function(){
       delete_post(data);
     }
     f(item, 'syndicate').onclick = function(){
-      console.log('onclick')
+      console.log('onclick : ',data.twitter_id)
       if(!data.twitter_id && sockethubClient){
         syndicate_to_twitter(data);
       }
@@ -56,10 +56,6 @@ function Post(data){
       this.fill_post(item, data);
 
       var next_element = feed_div.firstElementChild;
-      forEach(feed_div.getElementsByClassName('blogpost'), function(older_post){
-        if(older_post.dataset.date > data.date)
-          next_element = older_post;
-      })
       feed_div.insertBefore(item, next_element);
       this.div = item;
     }           

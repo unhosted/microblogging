@@ -1,9 +1,18 @@
 <html>
 <head>
-  <script src="sockethub-client.js"></script>
+  <script src="remotestorage.min.js"></script>
+  <script src="microblog-module.js"></script>
   <!-- <script src="syndicate.js"></script> -->
-  <script src="syndicate-test.js"></script>
-</head>
+  </head>
 <body>
+  <script>
+    function inspect(){
+    console.log('inspecting:',arguments)
+    }
+    remoteStorage.enableLog()
+    remoteStorage.claimAccess({microblog : 'rw'})
+    remoteStorage.displayWidget();
+  </script>
+  
 </body>
 </html>

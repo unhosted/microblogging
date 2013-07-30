@@ -2,19 +2,19 @@
 
 <html>
   <head>
-    <script src="sockethub-client.js" type="text/javascript"></script>
-
-    <script src="helpers.js" type="text/javascript"></script>
+    <script src="sockethub-client.min.js" type="text/javascript"></script>
     <script src="remotestorage.min.js" type="text/javascript"></script>
-    
+
     <script src="profile-module.js" type="text/javascript"></script>
     <script src="microblog-module.js" type="text/javascript"></script>
     <script src="credentials-module.js" type="text/javascript"></script>
-	
+
+    <script src="helpers.js" type="text/javascript"></script>
+    
     <script src="main.js" type="text/javascript"></script>
     <script src="post.js" type="text/javascript"></script>
     
-    <script src="rss.js" type="text/javascript"></script>
+    <!--<script src="rss.js" type="text/javascript"></script> -->
     
     <script src="remote.js" type="text/javascript"></script>
 
@@ -22,10 +22,8 @@
 
     <!-- <script src="register.js" type="text/javascript"></script> -->
     
-
-    
-    
     <link rel="stylesheet" href="microblogging.css">
+    <meta charset="UTF-8">
   </head>
   <body>
     
@@ -37,7 +35,7 @@
 	  <span class='screenname'> </span>: :
 	  <span class='created_at'> </span>
 	</a>
-	<p class='text'> have fun </p>
+	<pre class='text'> have fun </pre>
         <div class="pannel remote">
           <button class="button syndicate"> 
             <img class="icon" 
@@ -51,20 +49,22 @@
         </div>
       </div>
     </div>
-    <div id="login" onclick="init_remotestorage();">
+    <div id="login" onclick="document.getElementById('help')
+                             .style.display = 'none';
+                             init_remotestorage();">
       login
     </div>
     <div id="pannel">
       <div id="sockethub-widget" class="widget remote offline">
-        <img class="icon" src="/sockethub.ico" onclick="toggle(this.parentElement)">
+        <img class="icon" src="sockethub.ico" onclick="toggle(this.parentElement)">
         <form class="expandable">
           <p>
-            <span>host</span>  <input name="host"/>
-            <input type="checkbox" name="ssl"/> <span>ssl</span>
+            <label for="host">host</label>  <input name="host"/>
+            <input type="checkbox" name="ssl"/> <label for="ssl">ssl</label>
           </p>
           <p>
-            <span>port</span> <input name="port"/>
-            <span>secret</span> <input name="secret"/>
+            <label for="port">port</label> <input name="port"/>
+            <label for="secret">secret</label> <input name="secret"/>
           </p>
           <p>
             <button class="disconnected button" 
@@ -94,12 +94,16 @@
         <!-- <img class="sync connected" src="sync.png"> -->
         <form class="expandable">
           <p>
-            <span>consumer key</span>  <input name="consumer_key"/>
-            <span>access token</span> <input  name="access_token"/> 
+            <label for="consumer_key">consumer key</label>  <input name="consumer_key"/>
+          </p>
+          <p>  
+            <label for="access_token">access token</label> <input  name="access_token"/> 
           </p>
           <p>
-            <span>consumer secret</span> <input name="consumer_secret"/>
-            <span>access token secret</span> <input name="access_token_secret"/>
+            <label for="consumer_secret">consumer secret</label> <input name="consumer_secret"/>
+          </p>
+          <p>
+            <label for="access_token_secret">access token secret</label> <input name="access_token_secret"/>
           </p>
           <p>
             <button class="button" onclick="event.preventDefault();
@@ -107,20 +111,70 @@
               Save
             </button>
             <button class="button connected" onclick="event.preventDefault();
-                                            fetch_tweets('user')">Sync</button>
+                                            fetch_tweets('user')">
+              Sync
+            </button>
           </p>
         </form>
       </div>
 
       <form id="micropost" class="remote">
-	<textarea name='text'></textarea>
-	<button onclick="event.preventDefault(); create_post()"> POST</button>
-      </form>
+      <div class="rs">
+        <textarea name='text' placeholder="Post Something"></textarea>
+        <button onclick="event.preventDefault(); create_post()"> POST</button>
+      </div>
+      <div class="sh">  
+        <button id="dove_it" 
+                class="button dove disabled"
+                onclick="event.preventDefault();
+                         this.dataset['yes'] = 
+                         this.classList.toggle('active');">
+          <img class="icon" src="http://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Peace_dove_icon.svg/120px-Peace_dove_icon.svg.png"/>
+        </button>
+  <!--      <button id="book_it" 
+                class="button book disabled"
+                onclick="event.preventDefault();
+                         this.dataset['yes'] = 
+                         this.classList.toggle('active');">
+          <img class="icon" src="http://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Peace_dove_icon.svg/120px-Peace_dove_icon.svg.png"/>
+        </button> -->
+
+        </div>
+       </form>
 
     </div>
     
     <div id="feed">
-      
+      <div id="help">
+        <section>
+          <h3> Click Login Now </h3>
+        </section>
+        <section>
+          <h4> What is this? </h4>
+          <small>
+            <p> this is supposed to serve as your profile <p>
+            <p> you can put microposts on it and send the link to your profile to others, the homepage link in your profile provides that url until you set a homepage in your profile </p>
+            <p> it also syncs with twitter if desired, therefor you need a sockethub and your twitter credentials </p>
+            <p> it can grab profile information from your tweets if you do not have a profile yet </p>
+          </small>
+         
+        </section>
+        <section>
+        <h4> GET OPTIONS : </h4>
+        <small>
+           after the url of the app, you can add those to trigger certain behaviour, the app will do so automatically
+        </small>
+        
+        <p> base_url=https://host.domain/path/to/storage  : the base url to your remoteStorage if only this is set it serves your posts and profile for viewing purpose </p>
+        <p> me=true  :  logs in with remotestorage </p>
+        <p> syndicate=true  :  atempts to connect to sockethub und send credentials  </p>
+        <p> twitter={}  ||  twitter credentials, will get stored into your remoteStorage and used</p>
+        <p> socckethub={}  :  sockethub credentials, will get stored into your remoteStorage and used</p>
+        </section>
+        <br>
+        
+      </div>
+    
     </div>
     <form id="profile" name="profile">
       <img class="profile_img" src="//upload.wikimedia.org/wikipedia/commons/3/36/MRI_head_side.jpg"/>

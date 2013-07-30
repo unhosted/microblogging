@@ -35,7 +35,7 @@ RemoteStorage.defineModule('credentials-sockethub', function(privateClient, publ
 	return privateClient.getObject(name);
       },
       'onchange' : function(callback){
-        return publicClient.on('change', callback);
+        return privateClient.on('change', callback);
       }
     }
   }
@@ -71,12 +71,9 @@ RemoteStorage.defineModule('credentials-twitter', function(privateClient, public
 	return privateClient.getObject(name);
       },
       'onchange' : function(callback){
-        return publicClient.on('change', callback);
-      }   
+        return privateClient.on('change', callback);
+      }
     }
   }
 });
 
-function on(){
-  privateClient
-}
