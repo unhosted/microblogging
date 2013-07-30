@@ -152,20 +152,20 @@
         <section>
           <h4> What is this? </h4>
           <small>
-            <p> this is supposed to be a social-network like profile/microblog <p>
-            <p> You can Post stuff here and the app can take care of syndicating those to diffrent platforms </p>
-            <p> it also recives posts you made on those platforms and updates and saves them here </p>
-            <p> it can also produce a link containing a base_url to your remoteStorage, that makes your microblog and profile visible for people </p>
+            <p> this is supposed to serve as your profile <p>
+            <p> you can put microposts on it and send the link to your profile to others, the homepage link in your profile provides that url until you set a homepage in your profile </p>
+            <p> it also syncs with twitter if desired, therefor you need a sockethub and your twitter credentials </p>
+            <p> it can grab profile information from your tweets if you do not have a profile yet </p>
           </small>
          
         </section>
         <section>
         <h4> GET OPTIONS : </h4>
         <small>
-           after the url of the app, you can add those to trigger certain behaviour
+           after the url of the app, you can add those to trigger certain behaviour, the app will do so automatically
         </small>
         
-        <p> base_url=https://host.domain/path/to/storage </p>
+        <p> base_url=https://host.domain/path/to/storage  : the base url to your remoteStorage if only this is set it serves your posts and profile for viewing purpose </p>
         <p> me=true  :  logs in with remotestorage </p>
         <p> syndicate=true  :  atempts to connect to sockethub und send credentials  </p>
         <p> twitter={}  ||  twitter credentials, will get stored into your remoteStorage and used</p>

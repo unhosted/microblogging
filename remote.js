@@ -65,7 +65,7 @@ function init_remotestorage(){
   })
 
   
-  remoteStorage.onChange('/profile/me', function(resp) {
+  remoteStorage.onChange('/public/profile/me', function(resp) {
     console.log("profile.onchange : ", resp);
     
     //console.log("UPDATEING PROFILE : ", resp);
@@ -201,12 +201,12 @@ function restore_post(post){
 
 // profile edit buttons
 
-function done_editing_profile_callback(){
+function done_editing_profile_callback(event){
     event.preventDefault();
     done_profile(this);
 }
 
-function edit_profile_callback(){
+function edit_profile_callback(event){
     event.preventDefault();
     edit_profile(this);
 }
