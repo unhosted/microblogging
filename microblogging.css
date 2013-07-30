@@ -18,10 +18,11 @@ body {
 #feed {
     float: right;
     margin : 1em;
-    max-width : 65%;
+    width : 65%;
 }
 
 #profile {
+    margin-top : 10px;
     display:inline;
     float: left;
     max-width : 25%;
@@ -96,7 +97,6 @@ body {
     border : 3px lightgrey groove;
     padding : 0.5em;
     margin : 2em;
-    max-width : 100%;
 }
 .blogpost span {
     padding : 0.3em;
@@ -115,6 +115,8 @@ body {
 }
 .blogpost .text{
     text-align : center;
+    white-space : pre-wrap;
+    word-wrap : break-word;
 }
 .blogpost .pannel {
     float:right;
