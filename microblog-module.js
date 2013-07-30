@@ -32,11 +32,66 @@ RemoteStorage.defineModule('microblog', function(privateClient, publicClient){
       }
     }
   });
-  publicClient.declareType('micropost_list', {
+  publicClient.declareType('microposts_list', {
     type : 'array'
   });
 
   var path = "microposts/"
+  function getAllSorted(path){
+    var promise = promising();
+    getAll(path).then(function(list){
+      var len = list.length;
+      var item_list = []
+      list.forEach(function(item){
+        publicClient.getObject(item).then(function(item){
+          item_list.push(item);
+          len--;
+          if(len==0){
+            item_list = item_list.sort(function(a, b){
+              if(a.date > b.date)
+                return 1;
+              else if(a.date < b.date)
+                return -1;
+              else
+                return 0;
+            })
+            promise.fulfill(item_list);
+          }
+        });
+      })
+    })
+    return promise;
+  }
+  function getAll(path){
+    var all_items = [];
+    var promise = promising();
+    var len = 1;
+    _getAll(path);
+    function _getAll(current_path){
+      console.log(current_path,len);
+      publicClient.getListing(current_path).then( function(listing){
+        var dirs = [];
+        for(var i = 0; i < listing.length; i++){
+          var item = listing[i];
+          if(is_dir(item))
+            dirs.push(item)
+          else
+            all_items.push(current_path+item)
+        }
+        len += dirs.length;
+        dirs.map(function(d){
+          return current_path+d
+        }).forEach(_getAll)
+      }).then(function(){
+        len--;
+        if(len<=0){
+          promise.fulfill(all_items);
+        }
+      })
+    }
+    return promise;
+  } 
+
 
   function post_path(post){
     date = new Date(post.date);
@@ -50,100 +105,8 @@ RemoteStorage.defineModule('microblog', function(privateClient, publicClient){
   function is_dir(item){
     return item[item.length-1] == '/';
   }
-
-  function get_newest(_path, ammount, grassed){
-    //console.log('get_newest :',_path, ammount, grassed);
-    //alert('invoced')
-    function newest(_path, ammount, grassed){
-      if(typeof(grassed) === 'undefined'){
-        grassed = _path+':P';
-      }
-      return publicClient.getListing(_path).then(function(listing){
-        return listing.filter(function(t){
-        //  console.log(_path+t)
-          return ( is_dir(t) && (_path+t < grassed) )
-        }).sort()
-      }).then(function(pathes){
-        console.log('pathes',_path,pathes,'grassed',grassed);
-        if(pathes[pathes.length-1])
-          return newest(_path+pathes[pathes.length-1], ammount, grassed)
-        else
-          return publicClient.getAll(_path);
-      }).then(function(items){
-        var list = []
-        for(i in items){
-          list.push(items[i])
-        }
-        list = list.sort(function(a, b){
-          if(a.date > b.date)  return 1;
-          if(b.date > a.date) return -1;
-          else                 return 0;
-        })
-        if(list.length < ammount && list.length > 0) {
-          return newest(my_path, ammount - list.length, _path).then(
-            function(new_list){
-              console.log(list.concat(new_list));
-              return list.concat(new_list);
-            });
-        }
-        return list
-      }).then( function(e){ console.log(
-        'get_newest(',
-        _path,
-        ',',
-        ammount,
-        ') => ',
-        e); return e; } )
-    }
-    var my_path = _path;
-    return newest(_path, ammount, grassed)
-  }
-
-  function update_microblogs_list( options ){
-    if(typeof(options) === 'undefined')
-      options = { newest : 10, senders : [], target : 'microposts_list'}
-    return publicClient.getListing(path).then(
-      function(items){
-	var posts = [];
-	var users = [];
-        var len =  items.length;
-        for(var i = 0; i < len; i++){
-          var item = items[i];
-          if(is_dir(item)){
-            users.push(item);
-          }else{
-            posts.push(item);
-          }
-        }
-
-        
-        var senders = options.senders
-        if(senders.length > 0){
-            users = users.filter(function(user){
-              return ( senders.indexOf( user.slice(0, user.length) ) < 0 )
-            })
-          }
-
-        console.log(posts);
-        console.log(users);
-        users = [users[0]];
-        users.forEach(function(user){
-          get_newest(path+user, options.newest).then(function(e){console.log('then ....',e); return e;}).then(function(list){
-            list = list.map(function(l){
-              return publicClient.getItemURL(post_path(l)+l.post_id);
-            })
-            console.log(list)
-            publicClient.storeObject('micropost_list',options.target,list)
-          })
-        })
-        
-        
-      }
-    );
-  }
     
-  //var schemas = publicClient.schemas;
-  var keys =   ['screenname',  'fullname', 'date', 'text', 'post_id', 'twitter_id', 'avatar']//Object.keys(schemas[Object.keys(schemas)[0]].properties);
+  var keys =   ['screenname',  'fullname', 'date', 'text', 'post_id', 'twitter_id', 'avatar']
   
   
   function store_micropost(data){
@@ -173,8 +136,7 @@ RemoteStorage.defineModule('microblog', function(privateClient, publicClient){
       for(post_id in listing){
         var post = listing[post_id]; 
         
-        if(post.text.trim() == obj.text.trim() && 
-          (post.twitter_id && post.twitter_id == obj.twitter_id) || !post.twitter_id){
+        if(post.text.trim() == obj.text.trim()){
           console.log('found dublicate post  : ', post, 'will be merged with', obj)
           keys.forEach(function(k){
             if(!post[k]){
@@ -191,16 +153,48 @@ RemoteStorage.defineModule('microblog', function(privateClient, publicClient){
       }
     })  
   }
+  
+  function update_microblogs_list(){
+    return getAllSorted(path).then( function(list) {
+      var microposts_list = [];
+      list.forEach( function(item) {
+        microposts_list.push( 
+          publicClient.getItemURL( post_path(item)+item.post_id ) 
+        )
+      } )
+      console.log('updating microposts_list', microposts_list);
+      publicClient.storeObject('microposts_list','microposts_list', microposts_list);
+      
+      return microposts_list;
+    })
+  }
+
   return {
     'exports' : {
       pub: publicClient, //TODO while deuging 
       'load' : function(name){
-	console.log('loading ');
-	  
-	return publicClient.getObject(path+name);
+        console.log('loading ',name);
+	
+	return publicClient.getObject(name);
       },
-      'update' : update_microblogs_list
-      ,
+      'clear' : function(){
+        var promise = promising()
+        function error_occured(e){
+            promise.reject(e);
+          }
+        getAll(path).then(function(list){
+          len = list.length;
+          list.forEach(function(item){
+            publicClient.remove(item);
+          }).then(function(){
+            len--;
+            if(len==0)
+              promise.fulfill();
+          },error_occured)
+        }).then(undefined, error_occured);
+        return promise;
+      },
+      'update' : update_microblogs_list,
       'post' : function(data){
 	return store_micropost(data).then(
 	  update_microblogs_list
@@ -219,7 +213,7 @@ RemoteStorage.defineModule('microblog', function(privateClient, publicClient){
 	return publicClient.remove(name);
       },
       'list' : function(){
-	return publicClient.getListing(path);
+	return getAllSorted(path);
       },
       'onchange' : function(callback){
 	return publicClient.on('change', callback);

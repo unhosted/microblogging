@@ -18,8 +18,8 @@ var posts = [];
 
 function init(){
   remoteStorage.enableLog();
-
-
+  console.log("Welcome in the microblogging app")
+  
     options = args_to_object(document.location.search);
 
     feed_div = document.getElementById('feed');
@@ -72,15 +72,13 @@ function init(){
   
 }
 
+function clear_all_posts(){
+  while(posts.length > 0){
+    posts.pop().div.remove();
+  }
+}
 
 function get_items (items) {
-  items = items.sort(function(a,b){
-      if(a.created_at < b.created_at)
-          return -1;
-      if(a.created_at > b.created_at)
-          return 1;
-      return 0;
-    });
   console.log("post of this user : ", items);
   var max_items;
   if(max_items = options.max_items){

@@ -51,7 +51,7 @@ function init_remotestorage(){
       console.log("DELETE POST");
       gui_delete_post(item);
     } else if(!post_by_id(resp.newValue.post_id)
-              ){//&& typeof(resp.oldValue) == 'undefined' ) {
+              && typeof(resp.oldValue) == 'undefined' ) {
       console.log("NEW POST");
       new_post(resp.newValue);
     } else if(resp.oldValue && resp.newValue 
@@ -59,6 +59,8 @@ function init_remotestorage(){
 	      && ( item  = post_by_id(resp.oldValue.post_id) )){
       console.log("UPDATE POST");
       item.fill_post(undefined,resp.newValue)
+    } else {
+      console.log("uncaught onchange event : SHOULD NEVER HAPPEN please file a bug report")
     }
   })
 
@@ -108,29 +110,34 @@ function init_remotestorage(){
 }
 
 function rs_on_disconnect()	{
-    forEach(document.getElementsByClassName('remote'), function(el){
-	el.style.display = 'none'
-    });
-    forEach(document.getElementsByClassName('edit_profile'), 
-	function(el){
-	    el.style.display = 'none'
-	}
-    );
+  clear_all_posts()
+  forEach(document.getElementsByClassName('remote'), function(el){
+    el.style.display = 'none'
+  });
+  forEach(document.getElementsByClassName('edit_profile'), function(el){
+    el.style.display = 'none'
+  });
 }
 function rs_on_ready(){	
-  //console.log('!!! on ready !!!')
+  console.log('!!! on ready !!!')
+  clear_all_posts()
   options.base_url = remoteStorage.remote.href + '/public';
   remoteStorage.credentialsTwitter.get('profile').then(gui_set_twitter);
   remoteStorage.credentialsSockethub.get('profile').then(gui_set_sh);
   remoteStorage.profile.load().then(set_profile)
-  
+  remoteStorage.microblog.list().then(function(l){
+    console.log("list() said :",l)
+    l.forEach(new_post); 
+  }, function(e){
+    console.log(e)
+  });
   forEach(document.getElementsByClassName('remote'), function(el){
     el.style.display = 'block'
   })
 }
      
 function store_post(data){
-  return remoteStorage.microblog.store(data).then(function(){
+  return remoteStorage.microblog.post(data).then(function(){
     console.log('storing this one', data);
   }, function(e){
     console.error("something went wrong ... ",e,data)

@@ -59,12 +59,12 @@
         <img class="icon" src="sockethub.ico" onclick="toggle(this.parentElement)">
         <form class="expandable">
           <p>
-            <span>host</span>  <input name="host"/>
-            <input type="checkbox" name="ssl"/> <span>ssl</span>
+            <label for="host">host</label>  <input name="host"/>
+            <input type="checkbox" name="ssl"/> <label for="ssl">ssl</label>
           </p>
           <p>
-            <span>port</span> <input name="port"/>
-            <span>secret</span> <input name="secret"/>
+            <label for="port">port</label> <input name="port"/>
+            <label for="secret">secret</label> <input name="secret"/>
           </p>
           <p>
             <button class="disconnected button" 
@@ -94,12 +94,16 @@
         <!-- <img class="sync connected" src="sync.png"> -->
         <form class="expandable">
           <p>
-            <span>consumer key</span>  <input name="consumer_key"/>
-            <span>access token</span> <input  name="access_token"/> 
+            <label for="consumer_key">consumer key</label>  <input name="consumer_key"/>
+          </p>
+          <p>  
+            <label for="access_token">access token</label> <input  name="access_token"/> 
           </p>
           <p>
-            <span>consumer secret</span> <input name="consumer_secret"/>
-            <span>access token secret</span> <input name="access_token_secret"/>
+            <label for="consumer_secret">consumer secret</label> <input name="consumer_secret"/>
+          </p>
+          <p>
+            <label for="access_token_secret">access token secret</label> <input name="access_token_secret"/>
           </p>
           <p>
             <button class="button" onclick="event.preventDefault();

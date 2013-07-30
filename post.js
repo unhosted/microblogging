@@ -25,7 +25,7 @@ function Post(data){
     f(item,'screenname').textContent = data.screenname;
     f(item,'fullname').textContent = data.fullname;
     f(item,'text').textContent = data.text;
-    f(item,'created_at').textContent = (new Date(data.date)).toString();
+    f(item,'created_at').textContent = (new Date(data.date)).toLocaleDateString();
     f(item, 'avatar').src = data.avatar;
     
     f(item, 'delete').onclick = function(){
@@ -56,17 +56,6 @@ function Post(data){
       this.fill_post(item, data);
 
       var next_element = feed_div.firstElementChild;
-      var posts_list = feed_div.getElementsByClassName('blogpost')
-      var len = posts_list.length;
-      for(var i=0; i < len; i++){
-        var older_post = posts_list[i];
-        if(older_post.dataset.date < data.date){
-          console.log('NEXT ELEMENT',older_post.dataset.date, data.date)
-          next_element = older_post;
-          break;
-        }
-      }
-      console.log('inserting')
       feed_div.insertBefore(item, next_element);
       this.div = item;
     }           

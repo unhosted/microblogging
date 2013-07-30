@@ -96,6 +96,7 @@ body {
     border : 3px lightgrey groove;
     padding : 0.5em;
     margin : 2em;
+    max-width : 100%;
 }
 .blogpost span {
     padding : 0.3em;
@@ -177,7 +178,7 @@ body {
     display : none;
 }
 .widget.offline .disconnected {
-    display : block;
+    display : inline;
 }
 .widget .disconnected {
     display : none;
@@ -188,15 +189,20 @@ body {
 }
 
 .widget .expandable input{
-    max-width:7em;
+    width:8em;
+    font-size : 0.5em;
 }
-.widget .expandable span{
+.widget .expandable label{
     font-size : 0.6em;
-    margin:auto;
+    
 }
 
 .widget.expanded .expandable{
-    display : table;    
+    display : block;    
+    width : 17em;
+}
+.widget p {
+    margin : 0px;
 }
 
 .disabled {

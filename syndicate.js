@@ -12,29 +12,30 @@ function init_sockethub(cfg){
       sc.disconnect();
     }
     sc = SockethubClient.connect(cfg);
+    sc.on('registered', function(resp){
+      console.log('socketHub registration done!')
+      clearInterval(retryTimeout);
+      
+      dove_it = document.getElementById('dove_it').dataset;
+      
+      remove_class(sockethub_widget,'offline');
+      remove_class(sockethub_widget, 'expanded');
+      sockethubClient = sc;
+    })
+    sc.on('disconnected', function(resp){
+      console.log(resp);
+      add_class(sockethub_widget, 'offline');
+      add_class(dove_widget, 'offline');
+    })
+    sc.on('registration-failed', function(resp){
+      console.error('socketHub registration failed', resp)
+    })
+
   }
 
   retryTimeout = setInterval(register, 32127);
   register();
 
-  sc.on('registered', function(resp){
-    console.log('socketHub registration done!')
-    clearInterval(retryTimeout);
-    
-    dove_it = document.getElementById('dove_it').dataset;
-    
-    remove_class(sockethub_widget,'offline');
-    remove_class(sockethub_widget, 'expanded');
-    sockethubClient = sc;
-  })
-  sc.on('disconnected', function(resp){
-    console.log(resp);
-    add_class(sockethub_widget, 'offline');
-    add_class(dove_widget, 'offline');
-  })
-  sc.on('registration-failed', function(resp){
-    console.error('socketHub registration failed', resp)
-  })
   options.syndicate = 'true'
   push_state(options);
   return sc;
