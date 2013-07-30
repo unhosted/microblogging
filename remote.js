@@ -17,7 +17,8 @@ function init_remotestorage(){
   
   remoteStorage.caching.reset();
   remoteStorage.caching.enable('/public/profile/');
-  remoteStorage.caching.enable('/public/microblog/microposts/');
+  //remoteStorage.caching.enable('/public/microblog/microposts/');
+  // only the users path should be synced
   remoteStorage.caching.enable('/credentials-twitter/')
   remoteStorage.caching.enable('/credentials-sockethub/')
   //remoteStorage.caching.enable('/credentials-facebook/')  
@@ -124,13 +125,17 @@ function rs_on_ready(){
   options.base_url = remoteStorage.remote.href + '/public';
   remoteStorage.credentialsTwitter.get('profile').then(gui_set_twitter);
   remoteStorage.credentialsSockethub.get('profile').then(gui_set_sh);
-  remoteStorage.profile.load().then(set_profile)
-  remoteStorage.microblog.list().then(function(l){
-    console.log("list() said :",l)
-    l.forEach(new_post); 
-  }, function(e){
-    console.log(e)
-  });
+  remoteStorage.profile.load().then(set_profile).then( 
+    function(profile){
+      remoteStorage.caching.enable('/public/microblog/microposts/'+profile.screenname+'/');
+      remoteStorage.microblog.list(profile.screenname).then(function(l){
+        console.log("list() said :",l)
+        l.forEach(new_post); 
+      }, function(e){
+        console.log(e)
+      });
+    }
+  )
   forEach(document.getElementsByClassName('remote'), function(el){
     el.style.display = 'block'
   })

@@ -44,21 +44,24 @@ var update_timeout
 
 function process_twitter_message(message){
   if(message.verb == 'post'){
-	var data = {
-	    screenname : message.actor.address,
-	    fullname : message.actor.name,
-	    text : message.object.text,
-	    date : ( new Date(message.object.date) ).getTime(), 
-	    avatar : message.actor.image,
-	    twitter_id : message.object.id.toString()
-	}
+    remoteStorage.profile.load().then(function(profile){
+      var data = {
+	screenname : profile.screenname,
+	fullname : message.actor.name,
+	text : message.object.text,
+	date : ( new Date(message.object.date) ).getTime(), 
+	avatar : message.actor.image,
+	twitter_id : message.object.id.toString()
+      }
       console.log('reciving post via fetch : ', data);
       store_post(data);
+   
       clearTimeout(update_timeout)   // update runs once after 10 seconds reciving no post
       update_timeout = setTimeout(function(){
-	remoteStorage.microblog.update()
+        remoteStorage.microblog.update(data.screenname)
       }, 10000)
-    }
+    })
+  }
 }
 
 function process_response(message) {

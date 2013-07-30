@@ -71,6 +71,8 @@ RemoteStorage.defineModule('microblog', function(privateClient, publicClient){
       console.log(current_path,len);
       publicClient.getListing(current_path).then( function(listing){
         var dirs = [];
+        if(!listing)
+          return
         for(var i = 0; i < listing.length; i++){
           var item = listing[i];
           if(is_dir(item))
@@ -154,15 +156,24 @@ RemoteStorage.defineModule('microblog', function(privateClient, publicClient){
     })  
   }
   
-  function update_microblogs_list(){
-    return getAllSorted(path).then( function(list) {
+  function update_microblogs_list(user){
+    if(typeof(user) === 'undefined')
+      user = '';
+    else if(user[user.length]!='/')
+          user = user+'/';
+    return getAllSorted(path+user).then( function(list) {
       var microposts_list = [];
       list.forEach( function(item) {
         microposts_list.push( 
           publicClient.getItemURL( post_path(item)+item.post_id ) 
         )
       } )
-      console.log('updating microposts_list', microposts_list);
+      /*var name = 'microposts_list'
+      if(user.length > 0)
+        name+='_'+user
+        at a later point I might want to change the list name so that there can be one list per screenname but the app doesn't support this yet
+      */
+      console.log('updating microposts list', microposts_list);
       publicClient.storeObject('microposts_list','microposts_list', microposts_list);
       
       return microposts_list;
@@ -196,9 +207,9 @@ RemoteStorage.defineModule('microblog', function(privateClient, publicClient){
       },
       'update' : update_microblogs_list,
       'post' : function(data){
-	return store_micropost(data).then(
-	  update_microblogs_list
-	);
+	return store_micropost(data).then(function(){
+	  update_microblogs_list(data.screenname);
+        });
       },
       'store' : function(data){
 	return store_micropost(data);
@@ -212,8 +223,12 @@ RemoteStorage.defineModule('microblog', function(privateClient, publicClient){
         }
 	return publicClient.remove(name);
       },
-      'list' : function(){
-	return getAllSorted(path);
+      'list' : function(user){
+        if(typeof(user) === 'undefined')
+           user = '';
+        else if(user[user.length]!='/')
+          user = user+'/';
+	return getAllSorted(path+user);
       },
       'onchange' : function(callback){
 	return publicClient.on('change', callback);
