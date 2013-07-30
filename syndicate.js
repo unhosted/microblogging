@@ -54,7 +54,7 @@ function process_twitter_message(message){
 	twitter_id : message.object.id.toString()
       }
       console.log('reciving post via fetch : ', data);
-      store_post(data);
+      remoteStorage.microblog.store(data);
    
       clearTimeout(update_timeout)   // update runs once after 10 seconds reciving no post
       update_timeout = setTimeout(function(){
