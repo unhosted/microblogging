@@ -51,7 +51,7 @@ function Post(data){
       console.log("creating new Post : ", this.gui_post_id)
       item = blogpost_template.cloneNode(true);
       item.id = "";
-      item.dataset.gui_post_id = data.gui_post_id;
+      item.dataset.gui_post_id = this.gui_post_id;
       item.dataset.post_id = data.post_id;
       this.fill_post(item, data);
 

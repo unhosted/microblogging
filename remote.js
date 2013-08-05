@@ -130,7 +130,14 @@ function rs_on_ready(){
       remoteStorage.caching.enable('/public/microblog/microposts/'+profile.screenname+'/');
       remoteStorage.microblog.list(profile.screenname).then(function(l){
         console.log("list() said :",l)
-        l.forEach(new_post); 
+        return;
+        l.forEach(function(post){
+          if(!post_by_id(post.post_id)){
+            //console.log("post does not exists", post);
+            new_post(post);
+          } else; 
+            //console.log("post does exist",post);
+        }); 
       }, function(e){
         console.log(e)
       });
