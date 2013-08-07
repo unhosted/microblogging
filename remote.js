@@ -127,6 +127,8 @@ function rs_on_ready(){
   remoteStorage.credentialsSockethub.get('profile').then(gui_set_sh);
   remoteStorage.profile.load().then(set_profile).then( 
     function(profile){
+      if(!profile)
+        return;
       remoteStorage.caching.enable('/public/microblog/microposts/'+profile.screenname+'/');
       remoteStorage.microblog.list(profile.screenname).then(function(l){
         console.log("list() said :",l)

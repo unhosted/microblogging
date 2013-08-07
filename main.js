@@ -105,6 +105,10 @@ function get_profile(url){
 
 function set_profile(profile){
   //console.log("Setting Profile : ",profile);
+  if(!profile){
+    console.log("no profile in set_profile")
+    return;
+  }
   if(!profile.homepage){
     profile.homepage = window.location.origin+window.location.pathname+"?base_url="+options.base_url
   }
