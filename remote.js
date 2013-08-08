@@ -13,7 +13,7 @@ function init_remotestorage(){
 
   //remoteStorage = new RemoteStorage;
   remoteStorage.displayWidget();
-  remoteStorage.claimAccess( rs_scope );
+  remoteStorage.access.claim( rs_scope );
   
   remoteStorage.caching.reset();
   remoteStorage.caching.enable('/public/profile/');
