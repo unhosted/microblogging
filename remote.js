@@ -13,8 +13,10 @@ function init_remotestorage(){
 
   //remoteStorage = new RemoteStorage;
   remoteStorage.displayWidget();
-  remoteStorage.access.claim( rs_scope );
-  
+  for(var i in rs_scope) {
+    remoteStorage.access.claim(i, rs_scope[i] );
+    remoteStorage.access.claim(i, 'public/'+rs_scope[i] );
+  }
   remoteStorage.caching.reset();
   remoteStorage.caching.enable('/public/profile/');
   //remoteStorage.caching.enable('/public/microblog/microposts/');
