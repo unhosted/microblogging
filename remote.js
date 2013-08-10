@@ -15,7 +15,6 @@ function init_remotestorage(){
   remoteStorage.displayWidget();
   for(var i in rs_scope) {
     remoteStorage.access.claim(i, rs_scope[i] );
-    remoteStorage.access.claim(i, 'public/'+rs_scope[i] );
   }
   remoteStorage.caching.reset();
   remoteStorage.caching.enable('/public/profile/');
